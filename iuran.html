@@ -306,7 +306,7 @@ function checkTunggakan(){
   const nowStr=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0");
 
   el("warn").innerText =
-    (pnum(lastPeriode)<pnum(nowStr)) ? "⚠️ Ada tunggakan" : "";
+    (pnum(lastPeriode)<pnum(nowStr)) ? "[!] Ada tunggakan" : "";
 }
 
 // =======================
