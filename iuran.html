@@ -120,7 +120,7 @@ button{
 
 <script>
 
-const API = "https://script.google.com/macros/s/AKfycbxP27F3e_mrsO7609YRYotsL7IcKIbIb6bWYd6p_qIMsIa5SKuj7BgS2H52-Y_dnUIEiA/exec";
+const API = "https://script.google.com/macros/s/AKfycbxJAdcpu11QGuRhjNwwC3w9Efr4EMvAEai25SQs5xtRULh30oOj6u5h4CGMDLqL0e3_AA/exec";
 
 let wargaData = [];
 let lastPeriode = null;
@@ -259,6 +259,11 @@ el("jumlah").addEventListener("input", updatePreview);
 // =======================
 // TUNGGAKAN
 // =======================
+function getParam(name){
+  const url = new URL(window.location.href);
+  return url.searchParams.get(name);
+}
+  
 function checkTunggakan(){
 
   if(!lastPeriode) return;
@@ -324,6 +329,14 @@ el("btnSubmit").addEventListener("click", async function(){
 
 // =======================
 loadWarga();
+const selectedNama = getParam("nama");
+
+if(selectedNama){
+  document.getElementById("nama").value = selectedNama;
+
+  // trigger manual
+  document.getElementById("nama").dispatchEvent(new Event("change"));
+}  
 
 </script>
 
