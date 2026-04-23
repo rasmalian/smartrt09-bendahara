@@ -18,7 +18,6 @@ body{
   gap:10px;
   padding:10px;
   background:white;
-  box-shadow:0 2px 5px rgba(0,0,0,0.05);
 }
 
 .topbar button{
@@ -28,7 +27,6 @@ body{
   border-radius:50%;
   background:#007bff;
   color:white;
-  font-size:18px;
 }
 
 .container{
@@ -44,14 +42,6 @@ body{
   margin-bottom:10px;
 }
 
-input{
-  width:100%;
-  padding:12px;
-  margin:6px 0;
-  border-radius:8px;
-  border:1px solid #ddd;
-}
-
 button{
   width:100%;
   padding:12px;
@@ -63,7 +53,6 @@ button{
 
 .plus{color:green}
 .minus{color:red}
-
 </style>
 </head>
 
@@ -77,64 +66,87 @@ button{
 <div class="container">
 
 <div class="card">
-  <label>Pilih Bulan</label>
-  <input type="month" id="bulan">
-  <button onclick="load()">Load</button>
+<input type="month" id="bulan">
+<button onclick="load()">Load</button>
 </div>
 
-<div class="card" id="summary"></div>
+<div id="summary" class="card"></div>
 <div id="list"></div>
 
+</div>
+
+<!-- LOADING -->
+<div id="loading" style="
+position:fixed;
+top:0;left:0;
+width:100%;
+height:100%;
+background:rgba(255,255,255,0.8);
+display:none;
+align-items:center;
+justify-content:center;
+z-index:9999;
+">
+<div style="
+padding:20px;
+background:white;
+border-radius:10px;
+">⏳ Loading...</div>
 </div>
 
 <script>
 
 const API="https://script.google.com/macros/s/AKfycbyEvc4ntv7M3bIMxkIRmRLM0sa-_-6uJnIh9uvAzzPBo5HlD9QmUEpIWpmZgOTYUVX4pQ/exec";
 
-function el(id){return document.getElementById(id);}
+function showLoading(){loading.style.display="flex";}
+function hideLoading(){loading.style.display="none";}
 
 function goBack(){
-  if(document.referrer){
-    history.back();
-  }else{
-    location.href="index.html";
-  }
+  if(document.referrer) history.back();
+  else location.href="index.html";
 }
 
 async function load(){
 
-  const ym=el("bulan").value;
+  showLoading();
 
-  let url=API+"?action=getReport";
-  if(ym) url+="&ym="+ym;
+  try{
 
-  const res=await fetch(url);
-  const data=await res.json();
+    const ym=bulan.value;
 
-  let total=0;
+    let url=API+"?action=getReport";
+    if(ym) url+="&ym="+ym;
 
-  el("list").innerHTML="";
+    const res=await fetch(url);
+    const data=await res.json();
 
-  data.forEach(r=>{
-    const val=Number(r.nilai)||0;
-    total+=val;
+    let total=0;
+    list.innerHTML="";
 
-    const div=document.createElement("div");
-    div.className="card";
+    data.forEach(r=>{
+      const val=Number(r.nilai)||0;
+      total+=val;
 
-    div.innerHTML=`
-      ${r.tanggal || "-"}<br>
-      ${r.kategori || "-"}<br>
+      const div=document.createElement("div");
+      div.className="card";
+
+      div.innerHTML=`
+      ${r.tanggal||"-"}<br>
+      ${r.kategori||"-"}<br>
       <b class="${val>=0?'plus':'minus'}">${val}</b>
+      `;
+
+      list.appendChild(div);
+    });
+
+    summary.innerHTML=`
+    <b>${ym||"Bulan Ini"}</b><br>
+    Total: ${total}
     `;
 
-    el("list").appendChild(div);
-  });
-
-  el("summary").innerHTML=`
-    <b>Periode: ${ym || "Bulan Ini"}</b><br>
-    Total: ${total}
-  `;
+  }finally{
+    hideLoading();
+  }
 }
 
 window.onload=load;
