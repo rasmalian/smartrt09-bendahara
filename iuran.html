@@ -1,12 +1,16 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Iuran Warga</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-body{font-family:sans-serif;background:#f5f6fa;margin:0}
+*{box-sizing:border-box;}
+
+body{
+  font-family:sans-serif;
+  background:#f5f6fa;
+  margin:0;
+}
 
 /* TOPBAR */
 .topbar{
@@ -19,8 +23,13 @@ body{font-family:sans-serif;background:#f5f6fa;margin:0}
 }
 
 .topbar button{
-  width:40px;height:40px;border:none;border-radius:50%;
-  background:#007bff;color:white;font-size:18px;
+  width:40px;
+  height:40px;
+  border:none;
+  border-radius:50%;
+  background:#007bff;
+  color:white;
+  font-size:18px;
 }
 
 /* CONTAINER */
@@ -47,13 +56,33 @@ input,select{
   font-size:14px;
 }
 
-/* DROPDOWN MODERN */
+/* DROPDOWN */
 .select{
   appearance:none;
   -webkit-appearance:none;
   background-image:url("data:image/svg+xml;utf8,<svg fill='%23007bff' height='20' viewBox='0 0 24 24' width='20'><path d='M7 10l5 5 5-5z'/></svg>");
   background-repeat:no-repeat;
   background-position:right 10px center;
+}
+
+/* CHECKBOX GROUP */
+.check-group{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.check-item{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:8px;
+  border-radius:8px;
+  background:#f8f9fa;
+}
+
+.check-item input{
+  width:auto;
 }
 
 /* BUTTON */
@@ -67,10 +96,12 @@ button.submit{
   font-size:16px;
 }
 
+/* PREVIEW */
 .preview{
   background:#eef6ff;
   padding:10px;
   border-radius:8px;
+  font-size:14px;
 }
 
 .warn{
@@ -83,7 +114,7 @@ button.submit{
 <body>
 
 <div class="topbar">
-  <button onclick="goBack()">←</button>
+  <button onclick="goBack()">&#8592;</button>
   <b>Iuran Warga</b>
 </div>
 
@@ -108,11 +139,23 @@ button.submit{
   <div id="preview" class="preview"></div>
 </div>
 
-<div class="card">
-  <label><input type="checkbox" id="keamanan"> Keamanan</label>
-  <label><input type="checkbox" id="sampah"> Sampah</label>
-  <label><input type="checkbox" id="pembangunan"> Pembangunan</label>
-  <label><input type="checkbox" id="kas"> Kas</label>
+<div class="card check-group">
+  <div class="check-item">
+    <input type="checkbox" id="keamanan">
+    <label for="keamanan">Keamanan</label>
+  </div>
+  <div class="check-item">
+    <input type="checkbox" id="sampah">
+    <label for="sampah">Sampah</label>
+  </div>
+  <div class="check-item">
+    <input type="checkbox" id="pembangunan">
+    <label for="pembangunan">Pembangunan</label>
+  </div>
+  <div class="check-item">
+    <input type="checkbox" id="kas">
+    <label for="kas">Kas</label>
+  </div>
 </div>
 
 <div class="card">
@@ -123,7 +166,7 @@ button.submit{
   </select>
 
   <label>Keterangan</label>
-  <input id="ket" placeholder="Contoh: 2 bulan">
+  <input id="ket">
 </div>
 
 <button class="submit" id="submit">Simpan</button>
@@ -150,7 +193,6 @@ function goBack(){
 // =======================
 function normalize(val){
   if(!val) return null;
-
   if(typeof val==="string" && val.length===7) return val;
 
   const d=new Date(val);
@@ -186,7 +228,6 @@ async function loadWarga(){
     namaEl.innerHTML+=`<option value="${w.nama}">${w.nama}</option>`;
   });
 
-  // auto select dari dashboard
   const paramNama=getParam("nama");
 
   if(paramNama){
@@ -201,15 +242,12 @@ async function loadWarga(){
 // =======================
 function pilihWarga(){
 
-  const namaVal=el("nama").value;
-
-  const w=wargaData.find(x=>normStr(x.nama)===normStr(namaVal));
+  const w=wargaData.find(x=>normStr(x.nama)===normStr(el("nama").value));
   if(!w) return;
 
   el("alamat").value=w.alamat||"";
 
   lastPeriode=normalize(w.bayarterakhir);
-
   el("last").innerText=lastPeriode||"-";
 
   setCB("keamanan",w.keamanan);
@@ -267,11 +305,8 @@ function checkTunggakan(){
   const now=new Date();
   const nowStr=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0");
 
-  if(pnum(lastPeriode)<pnum(nowStr)){
-    el("warn").innerText="⚠️ Ada tunggakan";
-  }else{
-    el("warn").innerText="";
-  }
+  el("warn").innerText =
+    (pnum(lastPeriode)<pnum(nowStr)) ? "⚠️ Ada tunggakan" : "";
 }
 
 // =======================
@@ -299,19 +334,13 @@ el("submit").addEventListener("click",async function(){
     keterangan:el("ket").value
   };
 
-  const res=await fetch(API,{
+  await fetch(API,{
     method:"POST",
     body:JSON.stringify(data)
   });
 
-  const result=await res.json();
-
-  if(result.status==="success"){
-    alert("Berhasil! Total: "+result.total);
-    location.reload();
-  }else{
-    alert("Error");
-  }
+  alert("Berhasil");
+  location.reload();
 });
 
 // =======================
