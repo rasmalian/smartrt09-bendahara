@@ -4,326 +4,165 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Iuran Warga</title>
+<title>Dashboard Warga</title>
 
 <style>
 body{
   font-family:sans-serif;
-  background:#f5f6fa;
   margin:0;
+  background:#f5f6fa;
+}
+
+.header{
+  background:#007bff;
+  color:white;
+  padding:15px;
+  text-align:center;
+}
+
+.menu{
+  display:flex;
+  background:white;
+}
+
+.menu a{
+  flex:1;
+  padding:12px;
+  text-align:center;
+  text-decoration:none;
+  color:#333;
+  border-bottom:2px solid transparent;
+}
+
+.menu a.active{
+  border-bottom:2px solid #007bff;
+  font-weight:bold;
 }
 
 .container{
-  max-width:500px;
+  padding:10px;
+  max-width:600px;
   margin:auto;
-  padding:15px;
 }
 
 .card{
-  background:#fff;
-  padding:15px;
-  border-radius:12px;
-  margin-bottom:12px;
-  box-shadow:0 2px 6px rgba(0,0,0,0.05);
-}
-
-input,select{
-  width:100%;
+  background:white;
   padding:12px;
-  margin-top:6px;
-  margin-bottom:12px;
-  border-radius:8px;
-  border:1px solid #ddd;
-  font-size:16px;
-}
-
-label{
-  display:block;
-  margin-bottom:6px;
-}
-
-.checkbox-group label{
+  border-radius:10px;
+  margin-bottom:10px;
   display:flex;
-  gap:10px;
+  justify-content:space-between;
   align-items:center;
 }
 
-button{
-  width:100%;
-  padding:14px;
-  border:none;
-  border-radius:10px;
-  background:#007bff;
-  color:#fff;
-  font-size:16px;
+.info{
+  font-size:14px;
 }
 
-.preview{
-  background:#eef6ff;
-  padding:10px;
-  border-radius:8px;
+.badge{
+  background:#eee;
+  padding:4px 8px;
+  border-radius:6px;
+  font-size:12px;
 }
 
 .warn{
-  color:red;
-  font-size:13px;
+  background:#ffdddd;
 }
+
+button{
+  padding:8px 12px;
+  border:none;
+  border-radius:8px;
+  background:#28a745;
+  color:white;
+}
+
 </style>
 </head>
 
 <body>
 
-<div class="container">
-
-<div class="card">
-  <label>Nama</label>
-  <select id="nama"></select>
-
-  <label>Alamat</label>
-  <input id="alamat" readonly>
-
-  <b>Terakhir bayar:</b>
-  <div id="last">-</div>
-  <div id="warn" class="warn"></div>
+<div class="header">
+  <h3>Dashboard Warga</h3>
 </div>
 
-<div class="card">
-  <label>Jumlah bulan</label>
-  <input id="jumlah" type="number" value="1" min="1">
-
-  <div id="preview" class="preview">
-    Preview periode
-  </div>
+<div class="menu">
+  <a href="#" class="active">Warga</a>
+  <a href="transaksi.html">Transaksi</a>
 </div>
 
-<div class="card checkbox-group">
-  <label><input type="checkbox" id="keamanan"> Keamanan</label>
-  <label><input type="checkbox" id="sampah"> Sampah</label>
-  <label><input type="checkbox" id="pembangunan"> Pembangunan</label>
-  <label><input type="checkbox" id="kas"> Kas</label>
-</div>
-
-<div class="card">
-  <label>Metode</label>
-  <select id="metode">
-    <option value="transfer">Transfer</option>
-    <option value="tunai">Tunai</option>
-  </select>
-
-  <label>Keterangan</label>
-  <input id="ket" placeholder="Contoh: 2 bulan">
-</div>
-
-<button id="btnSubmit">Simpan</button>
-
-</div>
+<div class="container" id="list"></div>
 
 <script>
 
-const API = "https://script.google.com/macros/s/AKfycbxP27F3e_mrsO7609YRYotsL7IcKIbIb6bWYd6p_qIMsIa5SKuj7BgS2H52-Y_dnUIEiA/exec";
+const API = "https://script.google.com/macros/s/AKfycbxJAdcpu11QGuRhjNwwC3w9Efr4EMvAEai25SQs5xtRULh30oOj6u5h4CGMDLqL0e3_AA/exec";
 
-let wargaData = [];
-let lastPeriode = null;
-
-// helper
 function el(id){ return document.getElementById(id); }
 
 // =======================
-// NORMALIZE PERIODE
-// =======================
 function normalize(val){
-  if(!val) return null;
+  if(!val) return "-";
 
   if(typeof val === "string" && val.length === 7) return val;
 
   const d = new Date(val);
-
-  if(isNaN(d)) return null;
-
-  const y = d.getFullYear();
-  const m = String(d.getMonth()+1).padStart(2,"0");
-
-  return `${y}-${m}`;
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
 }
 
-// =======================
-// PERIODE KE ANGKA
 // =======================
 function pnum(p){
   const [y,m] = p.split("-").map(Number);
-  return y*12 + m;
+  return y*12+m;
 }
 
 // =======================
-// LOAD DATA
-// =======================
-async function loadWarga(){
-  try{
-    const res = await fetch(API + "?action=getWarga");
-    wargaData = await res.json();
+async function load(){
 
-    console.log("DATA WARGA:", wargaData);
+  const res = await fetch(API+"?action=getWarga");
+  const data = await res.json();
 
-    const namaEl = el("nama");
-    namaEl.innerHTML = "<option value=''>Pilih Warga</option>";
-
-    wargaData.forEach(w=>{
-      namaEl.innerHTML += `<option value="${w.nama}">${w.nama}</option>`;
-    });
-
-  }catch(err){
-    alert("Gagal load data");
-    console.error(err);
-  }
-}
-
-// =======================
-// PILIH WARGA
-// =======================
-el("nama").addEventListener("change", function(){
-
-  const namaVal = this.value;
-
-  const w = wargaData.find(x => x.nama === namaVal);
-
-  console.log("SELECTED:", w);
-
-  if(!w) return;
-
-  el("alamat").value = w.alamat || "";
-
-  lastPeriode = normalize(w.bayarterakhir);
-
-  el("last").innerText = lastPeriode || "-";
-
-  setCheckbox("keamanan", w.keamanan);
-  setCheckbox("sampah", w.sampah);
-  setCheckbox("pembangunan", w.pembangunan);
-  setCheckbox("kas", w.kas);
-
-  checkTunggakan();
-  updatePreview();
-});
-
-// =======================
-function setCheckbox(id,val){
-  const e = el(id);
-  e.checked = Number(val) === 1;
-  e.disabled = Number(val) === 0;
-}
-
-// =======================
-// GENERATE PERIODE
-// =======================
-function generatePeriode(last,jumlah){
-
-  let [y,m] = last.split("-").map(Number);
-
-  let result = [];
-
-  for(let i=1;i<=jumlah;i++){
-
-    let mm = m + i;
-    let yy = y;
-
-    while(mm > 12){
-      mm -= 12;
-      yy++;
-    }
-
-    result.push(`${yy}-${String(mm).padStart(2,"0")}`);
-  }
-
-  return result;
-}
-
-// =======================
-// PREVIEW
-// =======================
-function updatePreview(){
-
-  if(!lastPeriode) return;
-
-  const j = parseInt(el("jumlah").value);
-
-  if(!j || j < 1) return;
-
-  const list = generatePeriode(lastPeriode, j);
-
-  el("preview").innerHTML =
-    "<b>Akan dibayar:</b><br>" + list.join("<br>");
-}
-
-el("jumlah").addEventListener("input", updatePreview);
-
-// =======================
-// TUNGGAKAN
-// =======================
-function checkTunggakan(){
-
-  if(!lastPeriode) return;
+  const container = el("list");
+  container.innerHTML = "";
 
   const now = new Date();
-  const nowStr = now.getFullYear() + "-" + String(now.getMonth()+1).padStart(2,"0");
+  const nowp = now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0");
 
-  if(pnum(lastPeriode) < pnum(nowStr)){
-    el("warn").innerText = "⚠️ Ada tunggakan";
-  }else{
-    el("warn").innerText = "";
-  }
+  data.forEach(w=>{
+
+    const last = normalize(w.bayarterakhir);
+
+    let warn = "";
+    if(last !== "-" && pnum(last) < pnum(nowp)){
+      warn = "warn";
+    }
+
+    const div = document.createElement("div");
+    div.className = "card";
+
+    div.innerHTML = `
+      <div class="info">
+        <b>${w.nama}</b><br>
+        ${w.alamat}<br>
+        <span class="badge ${warn}">Last: ${last}</span>
+      </div>
+
+      <button onclick="bayar('${w.nama}')">Bayar</button>
+    `;
+
+    container.appendChild(div);
+  });
+
 }
 
 // =======================
-// SUBMIT
-// =======================
-el("btnSubmit").addEventListener("click", async function(){
-
-  if(!lastPeriode){
-    alert("Pilih warga dulu");
-    return;
-  }
-
-  const data = {
-    action: "addIuran",
-    nama: el("nama").value,
-    alamat: el("alamat").value,
-    periode_terakhir: lastPeriode,
-    jumlah_bulan: parseInt(el("jumlah").value),
-    keamanan: el("keamanan").checked,
-    sampah: el("sampah").checked,
-    pembangunan: el("pembangunan").checked,
-    kas: el("kas").checked,
-    metode: el("metode").value,
-    keterangan: el("ket").value
-  };
-
-  console.log("SEND:", data);
-
-  try{
-    const res = await fetch(API,{
-      method:"POST",
-      body: JSON.stringify(data)
-    });
-
-    const result = await res.json();
-
-    console.log("RESULT:", result);
-
-    if(result.status === "success"){
-      alert("Berhasil! Total: " + result.total);
-      location.reload();
-    }else{
-      alert("Error: " + result.message);
-    }
-
-  }catch(err){
-    alert("Gagal kirim data");
-    console.error(err);
-  }
-});
+function bayar(nama){
+  // redirect ke iuran dengan parameter
+  window.location.href = "iuran.html?nama=" + encodeURIComponent(nama);
+}
 
 // =======================
-loadWarga();
+load();
 
 </script>
 
