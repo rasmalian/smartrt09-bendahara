@@ -130,7 +130,7 @@ function renderPeriode(){
     return;
   }
 
-  el.innerHTML = list.map(p => `<div>• ${p}</div>`).join("");
+  el.innerHTML = list.map(p => `<div>${p}</div>`).join("");
 }
 
 // =================
@@ -202,7 +202,7 @@ function onChangeUser(){
   let t = Number(o.dataset.tunggakan || 0);
 
   tunggakanInfo.innerText =
-    t > 0 ? "⚠️ Tunggakan " + t + " bulan" : "";
+    t > 0 ? "[!!] Tunggakan " + t + " bulan" : "";
 
   hitung();
   renderPeriode();
