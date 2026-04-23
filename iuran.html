@@ -12,7 +12,7 @@ body{
   background:#f5f6fa;
 }
 
-  .topbar{
+.topbar{
   display:flex;
   align-items:center;
   gap:10px;
@@ -30,30 +30,13 @@ body{
   color:white;
   font-size:18px;
 }
+
 .container{
   max-width:480px;
   margin:auto;
   padding:12px;
 }
 
-/* HEADER BACK */
-.header{
-  display:flex;
-  align-items:center;
-  margin-bottom:10px;
-}
-
-.back{
-  font-size:20px;
-  cursor:pointer;
-  margin-right:10px;
-}
-
-.title{
-  font-weight:bold;
-}
-
-/* CARD */
 .card{
   background:white;
   padding:15px;
@@ -101,12 +84,10 @@ button{
 
 <div class="container">
 
-<!-- HEADER -->
-
 <div class="topbar">
   <button onclick="goBack()">&#8592;</button>
   <b>Iuran Warga</b>
-</div>  
+</div>
 
 <div class="card">
 <select id="nama"></select>
@@ -146,96 +127,91 @@ Total: Rp <span id="total">0</span>
 
 </div>
 
+<!-- LOADING -->
+<div id="loading" style="
+position:fixed;
+top:0;left:0;
+width:100%;
+height:100%;
+background:rgba(255,255,255,0.8);
+display:none;
+align-items:center;
+justify-content:center;
+z-index:9999;
+">
+<div style="
+padding:20px;
+background:white;
+border-radius:10px;
+box-shadow:0 2px 10px rgba(0,0,0,0.1);
+">⏳ Memproses...</div>
+</div>
+
 <script>
 
 const API="https://script.google.com/macros/s/AKfycbyEvc4ntv7M3bIMxkIRmRLM0sa-_-6uJnIh9uvAzzPBo5HlD9QmUEpIWpmZgOTYUVX4pQ/exec";
 
-let BIAYA = {};
-let lastPeriode = "";
+let BIAYA={}, lastPeriode="";
 
-// =================
-// GET PARAM
-// =================
+function showLoading(){loading.style.display="flex";}
+function hideLoading(){loading.style.display="none";}
+
 function getParam(n){
-  const url = new URL(window.location.href);
-  return url.searchParams.get(n);
+  return new URL(window.location.href).searchParams.get(n);
 }
 
-// =================
-// NORMALIZE
-// =================
 function normalize(v){
   if(!v) return "";
-
   if(typeof v==="string" && v.length===7) return v;
-
   let d=new Date(v);
   if(isNaN(d)) return "";
-
   return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
 }
 
-// =================
-// GENERATE PERIODE
-// =================
 function generatePeriode(last,jumlah){
-
   if(!last) return [];
-
-  let [y,m]=last.split("-").map(Number);
-  let res=[];
-
+  let [y,m]=last.split("-").map(Number),res=[];
   for(let i=1;i<=jumlah;i++){
     let mm=m+i,yy=y;
     while(mm>12){mm-=12;yy++}
     res.push(`${yy}-${String(mm).padStart(2,"0")}`);
   }
-
   return res;
 }
 
-// =================
-// INIT
-// =================
 async function init(){
+  showLoading();
+  try{
+    const warga=await fetch(API+"?action=getWarga").then(r=>r.json());
+    BIAYA=await fetch(API+"?action=getBiaya").then(r=>r.json());
 
-  const warga = await fetch(API+"?action=getWarga").then(r=>r.json());
-  BIAYA = await fetch(API+"?action=getBiaya").then(r=>r.json());
+    const selected=getParam("nama");
 
-  const selectedNama = getParam("nama");
+    warga.forEach(w=>{
+      let o=document.createElement("option");
+      o.value=w.nama;
+      o.textContent=w.nama;
 
-  warga.forEach(w=>{
-    let o=document.createElement("option");
-    o.value=w.nama;
-    o.textContent=w.nama;
+      o.dataset.alamat=w.alamat;
+      o.dataset.keamanan=w.keamanan;
+      o.dataset.sampah=w.sampah;
+      o.dataset.pembangunan=w.pembangunan;
+      o.dataset.kas=w.kas;
+      o.dataset.last=w.bayarterakhir;
+      o.dataset.tunggakan=w.tunggakan;
 
-    o.dataset.alamat=w.alamat;
-    o.dataset.keamanan=w.keamanan;
-    o.dataset.sampah=w.sampah;
-    o.dataset.pembangunan=w.pembangunan;
-    o.dataset.kas=w.kas;
-    o.dataset.last=w.bayarterakhir;
-    o.dataset.tunggakan=w.tunggakan;
+      if(selected===w.nama) o.selected=true;
 
-    if(selectedNama && selectedNama === w.nama){
-      o.selected = true;
-    }
+      nama.appendChild(o);
+    });
 
-    nama.appendChild(o);
-  });
+    nama.onchange=onChangeUser;
+    nama.dispatchEvent(new Event("change"));
 
-  nama.addEventListener("change",onChangeUser);
-
-  nama.dispatchEvent(new Event("change"));
+  }finally{hideLoading();}
 }
 
-init();
-
-// =================
-// CHANGE USER
-// =================
 function onChangeUser(){
-
   const o=nama.selectedOptions[0];
 
   alamat.value=o.dataset.alamat;
@@ -245,97 +221,71 @@ function onChangeUser(){
   pembangunan.checked=o.dataset.pembangunan==1;
   kas.checked=o.dataset.kas==1;
 
-  lastPeriode = normalize(o.dataset.last);
+  lastPeriode=normalize(o.dataset.last);
 
   let t=o.dataset.tunggakan||0;
-
-  tunggakanInfo.innerText =
-    t>0 ? "Tunggakan "+t+" bulan" : "";
+  tunggakanInfo.innerText=t>0?"Tunggakan "+t+" bulan":"";
 
   hitung();
   renderPeriode();
 }
 
-// =================
-// RENDER PERIODE
-// =================
 function renderPeriode(){
-
-  let jumlahVal = Number(jumlah.value)||0;
-
-  let list = generatePeriode(lastPeriode,jumlahVal);
-
-  if(list.length===0){
-    periodeList.innerHTML = "<i>-</i>";
-    return;
-  }
-
-  periodeList.innerHTML = list.map(p=>`<div>${p}</div>`).join("");
+  let list=generatePeriode(lastPeriode,Number(jumlah.value)||0);
+  periodeList.innerHTML=list.length?list.map(p=>`<div>${p}</div>`).join(""):"-";
 }
 
-// =================
-// HITUNG
-// =================
 function hitung(){
-
-  let bulan=Number(jumlah.value)||0;
-  let per=0;
-
+  let b=Number(jumlah.value)||0,per=0;
   if(keamanan.checked) per+=BIAYA.keamanan||0;
   if(sampah.checked) per+=BIAYA.sampah||0;
   if(pembangunan.checked) per+=BIAYA.pembangunan||0;
   if(kas.checked) per+=BIAYA.kas||0;
-
-  total.innerText=(per*bulan).toLocaleString("id-ID");
+  total.innerText=(per*b).toLocaleString("id-ID");
 }
 
-// =================
-// EVENT
-// =================
 ["keamanan","sampah","pembangunan","kas","jumlah"]
 .forEach(id=>{
   document.getElementById(id).addEventListener("input",()=>{
-    hitung();
-    renderPeriode();
+    hitung();renderPeriode();
   });
 });
 
-// =================
-// BACK
-// =================
 function goBack(){
-  window.location.href="index.html";
+  if(document.referrer) history.back();
+  else location.href="index.html";
 }
 
-// =================
-// SUBMIT
-// =================
 async function submit(){
+  showLoading();
+  try{
+    const res=await fetch(API,{
+      method:"POST",
+      body:JSON.stringify({
+        action:"addIuran",
+        nama:nama.value,
+        alamat:alamat.value,
+        jumlah_bulan:jumlah.value,
+        periode_terakhir:lastPeriode,
+        keamanan:keamanan.checked?1:0,
+        sampah:sampah.checked?1:0,
+        pembangunan:pembangunan.checked?1:0,
+        kas:kas.checked?1:0,
+        metode:metode.value,
+        keterangan:ket.value
+      })
+    });
 
-  const data={
-    action:"addIuran",
-    nama:nama.value,
-    alamat:alamat.value,
-    jumlah_bulan:jumlah.value,
-    periode_terakhir:lastPeriode,
-    keamanan:keamanan.checked?1:0,
-    sampah:sampah.checked?1:0,
-    pembangunan:pembangunan.checked?1:0,
-    kas:kas.checked?1:0,
-    metode:metode.value,
-    keterangan:ket.value
-  };
+    const r=await res.json();
+    alert("Total: "+r.total);
+    location.reload();
 
-  const res=await fetch(API,{
-    method:"POST",
-    body:JSON.stringify(data)
-  });
-
-  const r=await res.json();
-
-  alert("Total: "+r.total);
-  location.reload();
+  }catch(e){
+    alert("Error");
+  }finally{hideLoading();}
 }
+
+init();
 
 </script>
 
