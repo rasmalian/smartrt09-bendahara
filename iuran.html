@@ -4,207 +4,153 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-*{box-sizing:border-box;}
-
-body{
-  font-family:sans-serif;
-  background:#f5f6fa;
-  margin:0;
-}
-
-.topbar{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  padding:10px;
-  background:white;
-  box-shadow:0 2px 5px rgba(0,0,0,0.05);
-}
-
-.topbar button{
-  width:40px;height:40px;
-  border:none;
-  border-radius:50%;
-  background:#007bff;
-  color:white;
-  font-size:18px;
-}
-
-.container{
-  max-width:500px;
-  margin:auto;
-  padding:15px;
-}
-
-.card{
-  background:white;
-  padding:15px;
-  border-radius:12px;
-  margin-bottom:12px;
-}
-
-input,select{
-  width:100%;
-  padding:12px;
-  margin:6px 0;
-  border-radius:8px;
-  border:1px solid #ddd;
-}
-
-/* CHECKBOX */
-.check-item{
-  display:flex;
-  gap:10px;
-  align-items:center;
-  padding:8px;
-}
-
-/* BUTTON */
-button.submit{
-  width:100%;
-  padding:14px;
-  background:#28a745;
-  color:white;
-  border:none;
-  border-radius:10px;
-  font-size:16px;
-}
-
-/* LOADING */
-#loadingOverlay{
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.4);
-  z-index:9999;
-  justify-content:center;
-  align-items:center;
-  flex-direction:column;
-  color:white;
-}
-
-.spinner{
-  width:50px;height:50px;
-  border:5px solid #fff;
-  border-top:5px solid transparent;
-  border-radius:50%;
-  animation:spin 1s linear infinite;
-  margin-bottom:10px;
-}
-
-@keyframes spin{
-  0%{transform:rotate(0);}
-  100%{transform:rotate(360deg);}
-}
+body{font-family:sans-serif;background:#f5f6fa;margin:0;}
+.container{max-width:500px;margin:auto;padding:15px;}
+.card{background:white;padding:15px;border-radius:10px;margin-bottom:10px;}
+input,select{width:100%;padding:10px;margin:5px 0;}
+.check-item{display:flex;gap:10px;padding:5px;}
+button{width:100%;padding:12px;background:green;color:white;border:none;}
 </style>
 </head>
 
 <body>
 
-<div id="loadingOverlay">
-  <div class="spinner"></div>
-  <div>Memproses...</div>
-</div>
-
-<div class="topbar">
-  <button onclick="history.back()">&#8592;</button>
-  <b>Iuran Warga</b>
-</div>
-
 <div class="container">
 
 <div class="card">
-  <label>Nama</label>
-  <select id="nama"></select>
-
-  <label>Alamat</label>
-  <input id="alamat" readonly>
+<select id="nama"></select>
+<input id="alamat" readonly>
 </div>
 
 <div class="card">
-  <label>Jumlah bulan</label>
-  <input type="number" id="jumlah" value="1">
+<input type="number" id="jumlah" value="1">
 </div>
 
 <div class="card">
-  <div class="check-item"><input type="checkbox" id="keamanan">Keamanan</div>
-  <div class="check-item"><input type="checkbox" id="sampah">Sampah</div>
-  <div class="check-item"><input type="checkbox" id="pembangunan">Pembangunan</div>
-  <div class="check-item"><input type="checkbox" id="kas">Kas</div>
+<div class="check-item"><input type="checkbox" id="keamanan">Keamanan</div>
+<div class="check-item"><input type="checkbox" id="sampah">Sampah</div>
+<div class="check-item"><input type="checkbox" id="pembangunan">Pembangunan</div>
+<div class="check-item"><input type="checkbox" id="kas">Kas</div>
 </div>
 
 <div class="card">
-  <select id="metode">
-    <option value="transfer">Transfer</option>
-    <option value="tunai">Tunai</option>
-  </select>
-
-  <input id="ket" placeholder="Keterangan">
+<b>Total: Rp <span id="total">0</span></b>
 </div>
 
-<button class="submit" id="submit">Simpan</button>
+<div class="card">
+<select id="metode">
+<option value="transfer">Transfer</option>
+<option value="tunai">Tunai</option>
+</select>
+<input id="ket">
+</div>
+
+<button onclick="submit()">Simpan</button>
 
 </div>
 
 <script>
 
-const API="https://script.google.com/macros/s/AKfycby4skg8yWNJjAC4bUlOUi1XV3LmT1y3nEXVFdWPcVI461y3MWksXRRHQjytvhPpvNkNtA/exec";
+const API="https://script.google.com/macros/s/AKfycbxpMY3NMidcrB8oYd6PQ-7QaHOSH1X9B02C1cQ_RfaWwCirsfXQkLhox5FLz3Gu6_APqA/exec";
 
-function showLoading(){
-  document.getElementById("loadingOverlay").style.display="flex";
+let BIAYA={};
+
+// ===================
+// INIT
+// ===================
+async function init(){
+
+  const warga = await fetch(API+"?action=getWarga").then(r=>r.json());
+  BIAYA = await fetch(API+"?action=getBiaya").then(r=>r.json());
+
+  const select=document.getElementById("nama");
+
+  warga.forEach(w=>{
+    let o=document.createElement("option");
+    o.value=w.nama;
+    o.textContent=w.nama;
+
+    o.dataset.alamat=w.alamat;
+    o.dataset.keamanan=w.keamanan;
+    o.dataset.sampah=w.sampah;
+    o.dataset.pembangunan=w.pembangunan;
+    o.dataset.kas=w.kas;
+
+    select.appendChild(o);
+  });
+
+  select.dispatchEvent(new Event("change"));
 }
-function hideLoading(){
-  document.getElementById("loadingOverlay").style.display="none";
+
+init();
+
+// ===================
+// AUTO CHECKBOX
+// ===================
+document.getElementById("nama").onchange=function(){
+
+  const o=this.selectedOptions[0];
+
+  document.getElementById("alamat").value=o.dataset.alamat;
+
+  document.getElementById("keamanan").checked = o.dataset.keamanan==1;
+  document.getElementById("sampah").checked = o.dataset.sampah==1;
+  document.getElementById("pembangunan").checked = o.dataset.pembangunan==1;
+  document.getElementById("kas").checked = o.dataset.kas==1;
+
+  hitung();
+};
+
+// ===================
+// HITUNG TOTAL
+// ===================
+function hitung(){
+
+  let perBulan=0;
+  let bulan=Number(document.getElementById("jumlah").value)||0;
+
+  if(document.getElementById("keamanan").checked) perBulan+=BIAYA.keamanan||0;
+  if(document.getElementById("sampah").checked) perBulan+=BIAYA.sampah||0;
+  if(document.getElementById("pembangunan").checked) perBulan+=BIAYA.pembangunan||0;
+  if(document.getElementById("kas").checked) perBulan+=BIAYA.kas||0;
+
+  document.getElementById("total").innerText =
+    (perBulan*bulan).toLocaleString("id-ID");
 }
 
-let lock=false;
-
-document.getElementById("submit").addEventListener("click", async function(){
-
-  if(lock) return;
-  lock=true;
-
-  showLoading();
-
-  try{
-
-    const data={
-      action:"addIuran",
-      nama:document.getElementById("nama").value,
-      alamat:document.getElementById("alamat").value,
-      jumlah_bulan:document.getElementById("jumlah").value,
-      keamanan:document.getElementById("keamanan").checked?1:0,
-      sampah:document.getElementById("sampah").checked?1:0,
-      pembangunan:document.getElementById("pembangunan").checked?1:0,
-      kas:document.getElementById("kas").checked?1:0,
-      metode:document.getElementById("metode").value,
-      keterangan:document.getElementById("ket").value
-    };
-
-    const res=await fetch(API,{
-      method:"POST",
-      body:JSON.stringify(data)
-    });
-
-    const r=await res.json();
-
-    hideLoading();
-    lock=false;
-
-    if(r.status==="success"){
-      alert("Sukses: "+r.total);
-      location.reload();
-    }else{
-      alert("Gagal");
-    }
-
-  }catch(e){
-    hideLoading();
-    lock=false;
-    alert("Error koneksi");
-  }
-
+["keamanan","sampah","pembangunan","kas","jumlah"]
+.forEach(id=>{
+  document.getElementById(id).addEventListener("change",hitung);
 });
+
+// ===================
+// SUBMIT
+// ===================
+async function submit(){
+
+  const data={
+    action:"addIuran",
+    nama:nama.value,
+    alamat:alamat.value,
+    jumlah_bulan:jumlah.value,
+    keamanan:keamanan.checked?1:0,
+    sampah:sampah.checked?1:0,
+    pembangunan:pembangunan.checked?1:0,
+    kas:kas.checked?1:0,
+    metode:metode.value,
+    keterangan:ket.value
+  };
+
+  const res=await fetch(API,{
+    method:"POST",
+    body:JSON.stringify(data)
+  });
+
+  const r=await res.json();
+
+  alert("Total: "+r.total);
+  location.reload();
+}
 
 </script>
 
