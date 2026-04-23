@@ -1,11 +1,18 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-body{font-family:sans-serif;background:#f5f6fa;margin:0}
+*{box-sizing:border-box;}
 
+body{
+  font-family:sans-serif;
+  background:#f5f6fa;
+  margin:0;
+}
+
+/* TOPBAR */
 .topbar{
   display:flex;
   align-items:center;
@@ -16,21 +23,40 @@ body{font-family:sans-serif;background:#f5f6fa;margin:0}
 }
 
 .topbar button{
-  width:40px;height:40px;border:none;border-radius:50%;
-  background:#007bff;color:white;font-size:18px;
+  width:40px;
+  height:40px;
+  border:none;
+  border-radius:50%;
+  background:#007bff;
+  color:white;
+  font-size:18px;
 }
 
-.container{max-width:500px;margin:auto;padding:15px}
-.card{background:white;padding:15px;border-radius:10px;margin-bottom:10px}
+/* CONTAINER */
+.container{
+  max-width:500px;
+  margin:auto;
+  padding:15px;
+}
 
+.card{
+  background:white;
+  padding:15px;
+  border-radius:10px;
+  margin-bottom:10px;
+}
+
+/* INPUT */
 input,select{
   width:100%;
   padding:12px;
   margin:6px 0;
   border-radius:8px;
   border:1px solid #ddd;
+  font-size:14px;
 }
 
+/* BUTTON */
 button.submit{
   width:100%;
   padding:14px;
@@ -38,29 +64,41 @@ button.submit{
   color:white;
   border:none;
   border-radius:10px;
+  font-size:16px;
 }
+
 </style>
 </head>
 
 <body>
 
 <div class="topbar">
-  <button onclick="goBack()">←</button>
+  <button onclick="goBack()">&#8592;</button>
   <b>Transaksi</b>
 </div>
 
 <div class="container">
 
 <div class="card">
+
+  <label>Jenis</label>
   <select id="jenis">
     <option value="pemasukan">Pemasukan</option>
     <option value="pengeluaran">Pengeluaran</option>
   </select>
 
+  <label>Tanggal</label>
   <input type="date" id="tanggal">
-  <input placeholder="Kategori" id="kategori">
-  <input type="number" placeholder="Nominal" id="nilai">
-  <input placeholder="Keterangan" id="ket">
+
+  <label>Kategori</label>
+  <input id="kategori" placeholder="Contoh: kerja bhakti">
+
+  <label>Nominal</label>
+  <input type="number" id="nilai">
+
+  <label>Keterangan</label>
+  <input id="ket">
+
 </div>
 
 <button class="submit" onclick="submit()">Simpan</button>
@@ -74,7 +112,11 @@ const API="https://script.google.com/macros/s/AKfycby213wlg7xs-J_0rXmF-8AOqcpqsg
 function el(id){return document.getElementById(id);}
 
 function goBack(){
-  location.href="index.html";
+  if(document.referrer){
+    history.back();
+  }else{
+    location.href="index.html";
+  }
 }
 
 el("tanggal").value=new Date().toISOString().split("T")[0];
@@ -90,7 +132,7 @@ async function submit(){
     keterangan:el("ket").value
   };
 
-  const res=await fetch(API,{
+  await fetch(API,{
     method:"POST",
     body:JSON.stringify(data)
   });
