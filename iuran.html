@@ -12,6 +12,24 @@ body{
   background:#f5f6fa;
 }
 
+  .topbar{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px;
+  background:white;
+  box-shadow:0 2px 5px rgba(0,0,0,0.05);
+}
+
+.topbar button{
+  width:40px;
+  height:40px;
+  border:none;
+  border-radius:50%;
+  background:#007bff;
+  color:white;
+  font-size:18px;
+}
 .container{
   max-width:480px;
   margin:auto;
@@ -88,6 +106,10 @@ button{
   <div class="back" onclick="goBack()">←</div>
   <div class="title">Iuran Warga</div>
 </div>
+<div class="topbar">
+  <button onclick="goBack()">&#8592;</button>
+  <b>Iuran Warga</b>
+</div>  
 
 <div class="card">
 <select id="nama"></select>
