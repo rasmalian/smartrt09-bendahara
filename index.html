@@ -4,15 +4,81 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 body{font-family:sans-serif;margin:0;background:#f5f6fa}
-.header{background:#007bff;color:white;padding:15px;text-align:center}
-.menu{display:flex;background:white}
-.menu a{flex:1;padding:12px;text-align:center;text-decoration:none;color:#333}
-.container{max-width:600px;margin:auto;padding:10px}
-.card{background:white;padding:12px;border-radius:10px;margin-bottom:10px;display:flex;justify-content:space-between}
-.badge{font-size:12px;padding:4px 8px;border-radius:6px;background:#eee}
-.warn{background:#ffcccc}
+
+.header{
+  background:#007bff;
+  color:white;
+  padding:15px;
+  text-align:center;
+}
+
+.menu{
+  display:flex;
+  background:white;
+}
+
+.menu a{
+  flex:1;
+  padding:12px;
+  text-align:center;
+  text-decoration:none;
+  color:#333;
+}
+
+.container{
+  max-width:600px;
+  margin:auto;
+  padding:10px;
+}
+
+.card{
+  background:white;
+  padding:12px;
+  border-radius:10px;
+  margin-bottom:10px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.badge{
+  font-size:12px;
+  padding:4px 8px;
+  border-radius:6px;
+  background:#e9ecef;
+}
+
+.warn{
+  background:#ffcccc;
+  color:#b30000;
+}
+
+/* 🔥 DROPDOWN MODERN */
+.select{
+  appearance:none;
+  -webkit-appearance:none;
+  width:100%;
+  padding:12px;
+  border-radius:10px;
+  border:1px solid #ddd;
+  background:white;
+  font-size:14px;
+  margin-bottom:10px;
+  background-image:url("data:image/svg+xml;utf8,<svg fill='%23007bff' height='20' viewBox='0 0 24 24' width='20'><path d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat:no-repeat;
+  background-position:right 10px center;
+}
+
+button{
+  padding:8px 12px;
+  border:none;
+  border-radius:8px;
+  background:#28a745;
+  color:white;
+}
 </style>
 </head>
+
 <body>
 
 <div class="header">Dashboard Warga</div>
@@ -25,7 +91,7 @@ body{font-family:sans-serif;margin:0;background:#f5f6fa}
 
 <div class="container">
 
-<select id="sort">
+<select id="sort" class="select">
   <option value="rajin">Paling Rajin</option>
   <option value="nunggak">Paling Nunggak</option>
 </select>
