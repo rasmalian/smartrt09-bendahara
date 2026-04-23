@@ -1,10 +1,16 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-body{font-family:sans-serif;background:#f5f6fa;margin:0}
+*{box-sizing:border-box;}
+
+body{
+  font-family:sans-serif;
+  background:#f5f6fa;
+  margin:0;
+}
 
 .topbar{
   display:flex;
@@ -16,11 +22,20 @@ body{font-family:sans-serif;background:#f5f6fa;margin:0}
 }
 
 .topbar button{
-  width:40px;height:40px;border:none;border-radius:50%;
-  background:#007bff;color:white;font-size:18px;
+  width:40px;
+  height:40px;
+  border:none;
+  border-radius:50%;
+  background:#007bff;
+  color:white;
+  font-size:18px;
 }
 
-.container{max-width:500px;margin:auto;padding:15px}
+.container{
+  max-width:500px;
+  margin:auto;
+  padding:15px;
+}
 
 .card{
   background:white;
@@ -32,26 +47,37 @@ body{font-family:sans-serif;background:#f5f6fa;margin:0}
 input{
   width:100%;
   padding:12px;
-  margin:5px 0;
+  margin:6px 0;
   border-radius:8px;
   border:1px solid #ddd;
 }
 
+button{
+  width:100%;
+  padding:12px;
+  background:#007bff;
+  color:white;
+  border:none;
+  border-radius:8px;
+}
+
 .plus{color:green}
 .minus{color:red}
+
 </style>
 </head>
 
 <body>
 
 <div class="topbar">
-  <button onclick="goBack()">←</button>
+  <button onclick="goBack()">&#8592;</button>
   <b>Report</b>
 </div>
 
 <div class="container">
 
 <div class="card">
+  <label>Pilih Bulan</label>
   <input type="month" id="bulan">
   <button onclick="load()">Load</button>
 </div>
@@ -68,7 +94,11 @@ const API="https://script.google.com/macros/s/AKfycby213wlg7xs-J_0rXmF-8AOqcpqsg
 function el(id){return document.getElementById(id);}
 
 function goBack(){
-  location.href="index.html";
+  if(document.referrer){
+    history.back();
+  }else{
+    location.href="index.html";
+  }
 }
 
 async function load(){
@@ -93,8 +123,8 @@ async function load(){
     div.className="card";
 
     div.innerHTML=`
-      ${r.tanggal}<br>
-      ${r.kategori}<br>
+      ${r.tanggal || "-"}<br>
+      ${r.kategori || "-"}<br>
       <b class="${val>=0?'plus':'minus'}">${val}</b>
     `;
 
@@ -102,7 +132,7 @@ async function load(){
   });
 
   el("summary").innerHTML=`
-    Periode: ${ym||"Bulan Ini"}<br>
+    <b>Periode: ${ym || "Bulan Ini"}</b><br>
     Total: ${total}
   `;
 }
