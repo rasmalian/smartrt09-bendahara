@@ -102,10 +102,7 @@ button{
 <div class="container">
 
 <!-- HEADER -->
-<div class="header">
-  <div class="back" onclick="goBack()">←</div>
-  <div class="title">Iuran Warga</div>
-</div>
+
 <div class="topbar">
   <button onclick="goBack()">&#8592;</button>
   <b>Iuran Warga</b>
@@ -273,7 +270,7 @@ function renderPeriode(){
     return;
   }
 
-  periodeList.innerHTML = list.map(p=>`<div>• ${p}</div>`).join("");
+  periodeList.innerHTML = list.map(p=>`<div>${p}</div>`).join("");
 }
 
 // =================
@@ -307,7 +304,7 @@ function hitung(){
 // BACK
 // =================
 function goBack(){
-  window.location.href="dashboard.html";
+  window.location.href="index.html";
 }
 
 // =================
