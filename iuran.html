@@ -2,62 +2,16 @@
 <html lang="id">
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <style>
-body{
-  font-family:sans-serif;
-  margin:0;
-  background:#f5f6fa;
-}
-
-.container{
-  max-width:480px;
-  margin:auto;
-  padding:15px;
-}
-
-.card{
-  background:white;
-  padding:15px;
-  border-radius:12px;
-  margin-bottom:12px;
-  box-shadow:0 2px 6px rgba(0,0,0,0.05);
-}
-
-input, select{
-  width:100%;
-  padding:12px;
-  margin-top:8px;
-  border-radius:8px;
-  border:1px solid #ddd;
-}
-
-.check{
-  display:flex;
-  justify-content:space-between;
-  padding:10px 0;
-  border-bottom:1px solid #eee;
-}
-
-.check:last-child{
-  border:none;
-}
-
-.total{
-  font-size:18px;
-  font-weight:bold;
-  text-align:center;
-}
-
-button{
-  width:100%;
-  padding:14px;
-  background:#28a745;
-  color:white;
-  border:none;
-  border-radius:10px;
-  font-size:16px;
-}
+*{box-sizing:border-box;}
+body{font-family:sans-serif;background:#f5f6fa;margin:0;}
+.container{max-width:480px;margin:auto;padding:12px;}
+.card{background:white;padding:15px;border-radius:12px;margin-bottom:12px;}
+input,select{width:100%;padding:12px;margin-top:8px;border-radius:8px;border:1px solid #ddd;}
+.check{display:flex;justify-content:space-between;padding:10px 0;}
+.total{text-align:center;font-weight:bold;font-size:18px;}
+.warn{color:red;font-size:14px;}
+button{width:100%;padding:14px;background:#28a745;color:white;border:none;border-radius:10px;}
 </style>
 </head>
 
@@ -68,35 +22,23 @@ button{
 <div class="card">
 <select id="nama"></select>
 <input id="alamat" readonly>
+<div class="warn" id="tunggakanInfo"></div>
 </div>
 
 <div class="card">
-<label>Jumlah bulan</label>
 <input type="number" id="jumlah" value="1">
 </div>
 
 <div class="card">
-
-<div class="check">
-  <label>Keamanan</label>
-  <input type="checkbox" id="keamanan">
+<div class="check">Keamanan <input type="checkbox" id="keamanan"></div>
+<div class="check">Sampah <input type="checkbox" id="sampah"></div>
+<div class="check">Pembangunan <input type="checkbox" id="pembangunan"></div>
+<div class="check">Kas <input type="checkbox" id="kas"></div>
 </div>
 
-<div class="check">
-  <label>Sampah</label>
-  <input type="checkbox" id="sampah">
-</div>
-
-<div class="check">
-  <label>Pembangunan</label>
-  <input type="checkbox" id="pembangunan">
-</div>
-
-<div class="check">
-  <label>Kas</label>
-  <input type="checkbox" id="kas">
-</div>
-
+<div class="card">
+<b>Periode:</b>
+<div id="periodeList"></div>
 </div>
 
 <div class="card total">
@@ -108,8 +50,7 @@ Total: Rp <span id="total">0</span>
 <option value="transfer">Transfer</option>
 <option value="tunai">Tunai</option>
 </select>
-
-<input id="ket" placeholder="Keterangan">
+<input id="ket">
 </div>
 
 <button onclick="submit()">Simpan</button>
@@ -118,20 +59,17 @@ Total: Rp <span id="total">0</span>
 
 <script>
 
-const API="https://script.google.com/macros/s/AKfycbz6c21pLEWD4IRTgqK9du58MiaZE401a63SQC1V12LidWi5gBJvN9f7APWDFfMVuY5Gdw/exec";
+const API="https://script.google.com/macros/s/AKfycbysWMaC_ECsWqO9C4bsjIR-tZXscG8E8jwM1KDv4FZuPi_EhZfnnAzu4BekuowHl8oB5w/exec";
 let BIAYA={};
+let lastPeriode="";
 
-// =================
-// INIT
 // =================
 async function init(){
 
   const warga = await fetch(API+"?action=getWarga").then(r=>r.json());
   BIAYA = await fetch(API+"?action=getBiaya").then(r=>r.json());
 
-  console.log("BIAYA:", BIAYA); // DEBUG
-
-  const select=document.getElementById("nama");
+  const sel=nama;
 
   warga.forEach(w=>{
     let o=document.createElement("option");
@@ -143,17 +81,17 @@ async function init(){
     o.dataset.sampah=w.sampah;
     o.dataset.pembangunan=w.pembangunan;
     o.dataset.kas=w.kas;
+    o.dataset.last=w.bayarterakhir;
+    o.dataset.tunggakan=w.tunggakan;
 
-    select.appendChild(o);
+    sel.appendChild(o);
   });
 
-  select.dispatchEvent(new Event("change"));
+  sel.dispatchEvent(new Event("change"));
 }
 
 init();
 
-// =================
-// AUTO CHECKBOX
 // =================
 nama.onchange=function(){
 
@@ -161,37 +99,71 @@ nama.onchange=function(){
 
   alamat.value=o.dataset.alamat;
 
-  keamanan.checked = o.dataset.keamanan==1;
-  sampah.checked = o.dataset.sampah==1;
-  pembangunan.checked = o.dataset.pembangunan==1;
-  kas.checked = o.dataset.kas==1;
+  keamanan.checked=o.dataset.keamanan==1;
+  sampah.checked=o.dataset.sampah==1;
+  pembangunan.checked=o.dataset.pembangunan==1;
+  kas.checked=o.dataset.kas==1;
+
+  lastPeriode=o.dataset.last;
+
+  const t=o.dataset.tunggakan||0;
+
+  tunggakanInfo.innerText =
+    t>0 ? "⚠️ Tunggakan "+t+" bulan" : "";
 
   hitung();
+  renderPeriode();
 };
 
 // =================
-// HITUNG
+function generatePeriode(last,jumlah){
+
+  if(!last) return [];
+
+  let [y,m]=last.split("-").map(Number);
+  let res=[];
+
+  for(let i=1;i<=jumlah;i++){
+    let mm=m+i, yy=y;
+    while(mm>12){mm-=12;yy++}
+    res.push(`${yy}-${String(mm).padStart(2,"0")}`);
+  }
+
+  return res;
+}
+
+// =================
+function renderPeriode(){
+
+  let jumlah=Number(jumlah.value)||0;
+
+  let list=generatePeriode(lastPeriode,jumlah);
+
+  periodeList.innerHTML = list.map(p=>`<div>${p}</div>`).join("");
+}
+
 // =================
 function hitung(){
 
-  let bulan = Number(jumlah.value)||0;
+  let bulan=Number(jumlah.value)||0;
   let per=0;
 
-  if(keamanan.checked) per += BIAYA["keamanan"]||0;
-  if(sampah.checked) per += BIAYA["sampah"]||0;
-  if(pembangunan.checked) per += BIAYA["pembangunan"]||0;
-  if(kas.checked) per += BIAYA["kas"]||0;
+  if(keamanan.checked) per+=BIAYA.keamanan||0;
+  if(sampah.checked) per+=BIAYA.sampah||0;
+  if(pembangunan.checked) per+=BIAYA.pembangunan||0;
+  if(kas.checked) per+=BIAYA.kas||0;
 
-  total.innerText = (per*bulan).toLocaleString("id-ID");
+  total.innerText=(per*bulan).toLocaleString("id-ID");
 }
 
 ["keamanan","sampah","pembangunan","kas","jumlah"]
 .forEach(id=>{
-  document.getElementById(id).addEventListener("change",hitung);
+  document.getElementById(id).addEventListener("change",()=>{
+    hitung();
+    renderPeriode();
+  });
 });
 
-// =================
-// SUBMIT
 // =================
 async function submit(){
 
@@ -200,6 +172,7 @@ async function submit(){
     nama:nama.value,
     alamat:alamat.value,
     jumlah_bulan:jumlah.value,
+    periode_terakhir:lastPeriode,
     keamanan:keamanan.checked?1:0,
     sampah:sampah.checked?1:0,
     pembangunan:pembangunan.checked?1:0,
