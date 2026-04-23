@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Iuran Warga</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  background: #f5f6fa;
+}
+
+.container {
+  padding: 16px;
+  max-width: 500px;
+  margin: auto;
+}
+
+.card {
+  background: white;
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+h2 {
+  margin-top: 0;
+}
+
+input, select {
+  width: 100%;
+  padding: 12px;
+  margin-top: 6px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 16px;
+}
+
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.checkbox-group label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.preview {
+  background: #eef6ff;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+button {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 10px;
+  background: #007bff;
+  color: white;
+  font-size: 16px;
+  position: sticky;
+  bottom: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="card">
+    <h2>Input Iuran</h2>
+
+    <label>Nama</label>
+    <select id="nama" onchange="onSelectWarga()"></select>
+
+    <label>Alamat</label>
+    <input id="alamat" readonly>
+
+  </div>
+
+  <div class="card">
+
+    <label>Periode terakhir dibayar</label>
+    <input id="periode" type="month">
+
+    <label>Jumlah bulan</label>
+    <input id="jumlah" type="number" value="1" min="1">
+
+    <div class="preview" id="preview">Preview periode muncul di sini</div>
+
+  </div>
+
+  <div class="card">
+    <h3>Jenis Iuran</h3>
+
+    <div class="checkbox-group">
+      <label><input type="checkbox" id="keamanan"> Keamanan</label>
+      <label><input type="checkbox" id="sampah"> Sampah</label>
+      <label><input type="checkbox" id="pembangunan"> Pembangunan</label>
+      <label><input type="checkbox" id="kas"> Kas</label>
+    </div>
+
+  </div>
+
+  <div class="card">
+
+    <label>Metode</label>
+    <select id="metode">
+      <option value="transfer">Transfer</option>
+      <option value="tunai">Tunai</option>
+    </select>
+
+    <label>Keterangan</label>
+    <input id="keterangan" placeholder="Contoh: 2 bulan">
+
+  </div>
+
+  <button onclick="submitData()">Simpan</button>
+
+</div>
+
+<script>
+const API_URL = "ISI_URL_GAS_KAMU";
+
+// =======================
+// LOAD DATA WARGA
+// =======================
+async function loadWarga() {
+  const res = await fetch(API_URL + "?action=getWarga");
+  const data = await res.json();
+
+  window.wargaData = data;
+
+  const select = document.getElementById("nama");
+  select.innerHTML = "<option value=''>Pilih Warga</option>";
+
+  data.forEach(w => {
+    select.innerHTML += `<option value="${w.nama}">${w.nama}</option>`;
+  });
+}
+
+// =======================
+// SELECT WARGA
+// =======================
+function onSelectWarga() {
+  const nama = document.getElementById("nama").value;
+  const w = wargaData.find(x => x.nama === nama);
+
+  if (!w) return;
+
+  document.getElementById("alamat").value = w.alamat;
+
+  setCheckbox("keamanan", w.keamanan);
+  setCheckbox("sampah", w.sampah);
+  setCheckbox("pembangunan", w.pembangunan);
+  setCheckbox("kas", w.kas);
+}
+
+function setCheckbox(id, val) {
+  const el = document.getElementById(id);
+  el.checked = val == 1;
+  el.disabled = val == 0;
+}
+
+// =======================
+// GENERATE PERIODE
+// =======================
+function generatePeriode(last, jumlah) {
+  let [year, month] = last.split("-").map(Number);
+  const result = [];
+
+  for (let i = jumlah - 1; i >= 0; i--) {
+    let y = year;
+    let m = month - i;
+
+    while (m < 1) {
+      m += 12;
+      y--;
+    }
+
+    result.push(`${y}-${String(m).padStart(2,"0")}`);
+  }
+
+  return result;
+}
+
+// =======================
+// PREVIEW
+// =======================
+document.getElementById("jumlah").addEventListener("input", updatePreview);
+document.getElementById("periode").addEventListener("input", updatePreview);
+
+function updatePreview() {
+  const p = document.getElementById("periode").value;
+  const j = parseInt(document.getElementById("jumlah").value);
+
+  if (!p || !j) return;
+
+  const list = generatePeriode(p, j);
+
+  document.getElementById("preview").innerHTML =
+    "<b>Akan dibuat:</b><br>" + list.join("<br>");
+}
+
+// =======================
+// SUBMIT
+// =======================
+async function submitData() {
+
+  const data = {
+    action: "addIuran",
+    nama: document.getElementById("nama").value,
+    alamat: document.getElementById("alamat").value,
+    periode_terakhir: document.getElementById("periode").value,
+    jumlah_bulan: parseInt(document.getElementById("jumlah").value),
+    keamanan: document.getElementById("keamanan").checked,
+    sampah: document.getElementById("sampah").checked,
+    pembangunan: document.getElementById("pembangunan").checked,
+    kas: document.getElementById("kas").checked,
+    metode: document.getElementById("metode").value,
+    keterangan: document.getElementById("keterangan").value
+  };
+
+  if (!data.nama || !data.periode_terakhir) {
+    alert("Lengkapi data!");
+    return;
+  }
+
+  const res = await fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify(data)
+  });
+
+  const result = await res.json();
+
+  alert("Berhasil! TrackID: " + result.trackid);
+
+}
+
+// init
+loadWarga();
+
+</script>
+
+</body>
+</html>
