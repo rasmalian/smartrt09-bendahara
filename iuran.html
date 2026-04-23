@@ -7,22 +7,91 @@
 
 <style>
 body{font-family:sans-serif;background:#f5f6fa;margin:0}
-.container{max-width:500px;margin:auto;padding:15px}
-.card{background:#fff;padding:15px;border-radius:12px;margin-bottom:12px}
-input,select{width:100%;padding:12px;margin:6px 0;border-radius:8px;border:1px solid #ddd}
-button{width:100%;padding:14px;background:#007bff;color:#fff;border:none;border-radius:10px}
-.preview{background:#eef6ff;padding:10px;border-radius:8px}
-.warn{color:red;font-size:13px}
+
+/* TOPBAR */
+.topbar{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px;
+  background:white;
+  box-shadow:0 2px 5px rgba(0,0,0,0.05);
+}
+
+.topbar button{
+  width:40px;height:40px;border:none;border-radius:50%;
+  background:#007bff;color:white;font-size:18px;
+}
+
+/* CONTAINER */
+.container{
+  max-width:500px;
+  margin:auto;
+  padding:15px;
+}
+
+.card{
+  background:white;
+  padding:15px;
+  border-radius:12px;
+  margin-bottom:12px;
+}
+
+/* INPUT */
+input,select{
+  width:100%;
+  padding:12px;
+  margin:6px 0;
+  border-radius:8px;
+  border:1px solid #ddd;
+  font-size:14px;
+}
+
+/* DROPDOWN MODERN */
+.select{
+  appearance:none;
+  -webkit-appearance:none;
+  background-image:url("data:image/svg+xml;utf8,<svg fill='%23007bff' height='20' viewBox='0 0 24 24' width='20'><path d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat:no-repeat;
+  background-position:right 10px center;
+}
+
+/* BUTTON */
+button.submit{
+  width:100%;
+  padding:14px;
+  background:#28a745;
+  color:white;
+  border:none;
+  border-radius:10px;
+  font-size:16px;
+}
+
+.preview{
+  background:#eef6ff;
+  padding:10px;
+  border-radius:8px;
+}
+
+.warn{
+  color:red;
+  font-size:13px;
+}
 </style>
 </head>
 
 <body>
 
+<div class="topbar">
+  <button onclick="goBack()">←</button>
+  <b>Iuran Warga</b>
+</div>
+
 <div class="container">
 
 <div class="card">
   <label>Nama</label>
-  <select id="nama"></select>
+  <select id="nama" class="select"></select>
 
   <label>Alamat</label>
   <input id="alamat" readonly>
@@ -48,89 +117,83 @@ button{width:100%;padding:14px;background:#007bff;color:#fff;border:none;border-
 
 <div class="card">
   <label>Metode</label>
-  <select id="metode">
+  <select id="metode" class="select">
     <option value="transfer">Transfer</option>
     <option value="tunai">Tunai</option>
   </select>
 
   <label>Keterangan</label>
-  <input id="ket">
+  <input id="ket" placeholder="Contoh: 2 bulan">
 </div>
 
-<button id="submit">Simpan</button>
+<button class="submit" id="submit">Simpan</button>
 
 </div>
 
 <script>
 
-const API = "https://script.google.com/macros/s/AKfycbxJAdcpu11QGuRhjNwwC3w9Efr4EMvAEai25SQs5xtRULh30oOj6u5h4CGMDLqL0e3_AA/exec";
+const API="https://script.google.com/macros/s/AKfycby213wlg7xs-J_0rXmF-8AOqcpqsgZAsc54xM0ZHp5WJOL_x1Eyvxwq8hRILj73Vp26/exec";
 
-let wargaData = [];
-let lastPeriode = null;
+let wargaData=[];
+let lastPeriode=null;
 
-// =======================
-function el(id){ return document.getElementById(id); }
+function el(id){return document.getElementById(id);}
 
-// =======================
-// NORMALIZE PERIODE
+function goBack(){
+  if(document.referrer){
+    history.back();
+  }else{
+    location.href="index.html";
+  }
+}
+
 // =======================
 function normalize(val){
   if(!val) return null;
 
-  if(typeof val === "string" && val.length === 7) return val;
+  if(typeof val==="string" && val.length===7) return val;
 
-  const d = new Date(val);
+  const d=new Date(val);
   if(isNaN(d)) return null;
 
   return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
 }
 
-// =======================
 function normStr(s){
-  return String(s || "").trim().toLowerCase();
+  return String(s||"").trim().toLowerCase();
 }
 
-// =======================
 function getParam(name){
-  const url = new URL(window.location.href);
+  const url=new URL(window.location.href);
   return url.searchParams.get(name);
 }
 
-// =======================
 function pnum(p){
-  const [y,m] = p.split("-").map(Number);
+  const [y,m]=p.split("-").map(Number);
   return y*12+m;
 }
 
 // =======================
 async function loadWarga(){
 
-  const res = await fetch(API + "?action=getWarga");
-  wargaData = await res.json();
+  const res=await fetch(API+"?action=getWarga");
+  wargaData=await res.json();
 
-  console.log("DATA:", wargaData);
-
-  const namaEl = el("nama");
-  namaEl.innerHTML = "<option value=''>Pilih Warga</option>";
+  const namaEl=el("nama");
+  namaEl.innerHTML="<option value=''>Pilih Warga</option>";
 
   wargaData.forEach(w=>{
-    namaEl.innerHTML += `<option value="${w.nama}">${w.nama}</option>`;
+    namaEl.innerHTML+=`<option value="${w.nama}">${w.nama}</option>`;
   });
 
-  // 🔥 AUTO SELECT DARI URL
-  const paramNama = getParam("nama");
+  // auto select dari dashboard
+  const paramNama=getParam("nama");
 
   if(paramNama){
-
-    const found = wargaData.find(w =>
-      normStr(w.nama) === normStr(paramNama)
-    );
-
+    const found=wargaData.find(w=>normStr(w.nama)===normStr(paramNama));
     if(found){
-      namaEl.value = found.nama;
+      namaEl.value=found.nama;
       namaEl.dispatchEvent(new Event("change"));
-    } else {
-      console.warn("Nama tidak ditemukan:", paramNama);
     }
   }
 }
@@ -138,58 +201,46 @@ async function loadWarga(){
 // =======================
 function pilihWarga(){
 
-  const namaVal = el("nama").value;
+  const namaVal=el("nama").value;
 
-  const w = wargaData.find(x =>
-    normStr(x.nama) === normStr(namaVal)
-  );
-
-  console.log("SELECTED:", w);
-
+  const w=wargaData.find(x=>normStr(x.nama)===normStr(namaVal));
   if(!w) return;
 
-  el("alamat").value = w.alamat || "";
+  el("alamat").value=w.alamat||"";
 
-  lastPeriode = normalize(w.bayarterakhir);
+  lastPeriode=normalize(w.bayarterakhir);
 
-  el("last").innerText = lastPeriode || "-";
+  el("last").innerText=lastPeriode||"-";
 
-  setCheckbox("keamanan", w.keamanan);
-  setCheckbox("sampah", w.sampah);
-  setCheckbox("pembangunan", w.pembangunan);
-  setCheckbox("kas", w.kas);
+  setCB("keamanan",w.keamanan);
+  setCB("sampah",w.sampah);
+  setCB("pembangunan",w.pembangunan);
+  setCB("kas",w.kas);
 
   checkTunggakan();
   updatePreview();
 }
 
 // =======================
-function setCheckbox(id,val){
-  const e = el(id);
-  e.checked = Number(val) === 1;
-  e.disabled = Number(val) === 0;
+function setCB(id,v){
+  const e=el(id);
+  e.checked=Number(v)===1;
+  e.disabled=Number(v)===0;
 }
 
 // =======================
-function generatePeriode(last,jumlah){
+function generate(last,j){
 
-  let [y,m] = last.split("-").map(Number);
-  let result = [];
+  let [y,m]=last.split("-").map(Number);
+  let res=[];
 
-  for(let i=1;i<=jumlah;i++){
-
-    let mm = m + i;
-    let yy = y;
-
-    while(mm > 12){
-      mm -= 12;
-      yy++;
-    }
-
-    result.push(`${yy}-${String(mm).padStart(2,"0")}`);
+  for(let i=1;i<=j;i++){
+    let mm=m+i,yy=y;
+    while(mm>12){mm-=12;yy++}
+    res.push(`${yy}-${String(mm).padStart(2,"0")}`);
   }
 
-  return result;
+  return res;
 }
 
 // =======================
@@ -197,81 +248,70 @@ function updatePreview(){
 
   if(!lastPeriode) return;
 
-  const j = parseInt(el("jumlah").value);
+  const j=parseInt(el("jumlah").value);
   if(!j) return;
 
-  const list = generatePeriode(lastPeriode, j);
+  const list=generate(lastPeriode,j);
 
-  el("preview").innerHTML =
-    "<b>Akan dibayar:</b><br>" + list.join("<br>");
+  el("preview").innerHTML=
+    "<b>Akan dibayar:</b><br>"+list.join("<br>");
 }
 
-el("jumlah").addEventListener("input", updatePreview);
+el("jumlah").addEventListener("input",updatePreview);
 
 // =======================
 function checkTunggakan(){
 
   if(!lastPeriode) return;
 
-  const now = new Date();
-  const nowStr = now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0");
+  const now=new Date();
+  const nowStr=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0");
 
-  if(pnum(lastPeriode) < pnum(nowStr)){
-    el("warn").innerText = "⚠️ Ada tunggakan";
-  } else {
-    el("warn").innerText = "";
+  if(pnum(lastPeriode)<pnum(nowStr)){
+    el("warn").innerText="⚠️ Ada tunggakan";
+  }else{
+    el("warn").innerText="";
   }
 }
 
 // =======================
-el("nama").addEventListener("change", pilihWarga);
+el("nama").addEventListener("change",pilihWarga);
 
 // =======================
-el("submit").addEventListener("click", async function(){
+el("submit").addEventListener("click",async function(){
 
   if(!lastPeriode){
     alert("Pilih warga dulu");
     return;
   }
 
-  const data = {
-    action: "addIuran",
-    nama: el("nama").value,
-    alamat: el("alamat").value,
-    periode_terakhir: lastPeriode,
-    jumlah_bulan: parseInt(el("jumlah").value),
-    keamanan: el("keamanan").checked,
-    sampah: el("sampah").checked,
-    pembangunan: el("pembangunan").checked,
-    kas: el("kas").checked,
-    metode: el("metode").value,
-    keterangan: el("ket").value
+  const data={
+    action:"addIuran",
+    nama:el("nama").value,
+    alamat:el("alamat").value,
+    periode_terakhir:lastPeriode,
+    jumlah_bulan:parseInt(el("jumlah").value),
+    keamanan:el("keamanan").checked,
+    sampah:el("sampah").checked,
+    pembangunan:el("pembangunan").checked,
+    kas:el("kas").checked,
+    metode:el("metode").value,
+    keterangan:el("ket").value
   };
 
-  console.log("SEND:", data);
+  const res=await fetch(API,{
+    method:"POST",
+    body:JSON.stringify(data)
+  });
 
-  try{
-    const res = await fetch(API,{
-      method:"POST",
-      body: JSON.stringify(data)
-    });
+  const result=await res.json();
 
-    const result = await res.json();
-
-    console.log("RESULT:", result);
-
-    if(result.status === "success"){
-      alert("Berhasil! Total: " + result.total);
-      location.reload();
-    }else{
-      alert("Error!");
-    }
-
-  }catch(err){
-    alert("Gagal kirim data");
-    console.error(err);
+  if(result.status==="success"){
+    alert("Berhasil! Total: "+result.total);
+    location.reload();
+  }else{
+    alert("Error");
   }
-
 });
 
 // =======================
