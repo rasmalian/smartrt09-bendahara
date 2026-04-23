@@ -5,36 +5,98 @@
 
 <style>
 *{box-sizing:border-box;}
-body{font-family:sans-serif;margin:0;background:#f5f6fa;}
-.container{max-width:480px;margin:auto;padding:12px;}
-.card{background:white;padding:15px;border-radius:12px;margin-bottom:12px;}
-input,select{width:100%;padding:12px;margin-top:8px;border-radius:8px;border:1px solid #ddd;}
-.check{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee;}
-.check:last-child{border:none;}
-.total{text-align:center;font-weight:bold;font-size:18px;}
-.warn{color:red;font-size:14px;}
-button{width:100%;padding:14px;background:#28a745;color:white;border:none;border-radius:10px;}
+
+body{
+  font-family:sans-serif;
+  margin:0;
+  background:#f5f6fa;
+}
+
+.container{
+  max-width:480px;
+  margin:auto;
+  padding:12px;
+}
+
+/* HEADER BACK */
+.header{
+  display:flex;
+  align-items:center;
+  margin-bottom:10px;
+}
+
+.back{
+  font-size:20px;
+  cursor:pointer;
+  margin-right:10px;
+}
+
+.title{
+  font-weight:bold;
+}
+
+/* CARD */
+.card{
+  background:white;
+  padding:15px;
+  border-radius:12px;
+  margin-bottom:12px;
+}
+
+input,select{
+  width:100%;
+  padding:12px;
+  margin-top:8px;
+  border-radius:8px;
+  border:1px solid #ddd;
+}
+
+.check{
+  display:flex;
+  justify-content:space-between;
+  padding:10px 0;
+}
+
+.total{
+  text-align:center;
+  font-weight:bold;
+  font-size:18px;
+}
+
+.warn{
+  color:red;
+  font-size:14px;
+}
+
+button{
+  width:100%;
+  padding:14px;
+  background:#28a745;
+  color:white;
+  border:none;
+  border-radius:10px;
+}
 </style>
 </head>
 
 <body>
-<div class="topbar">
-  <button onclick="goBack()">&#8592;</button>
-  <b>Iuran</b>
-</div>
+
 <div class="container">
 
+<!-- HEADER -->
+<div class="header">
+  <div class="back" onclick="goBack()">←</div>
+  <div class="title">Iuran Warga</div>
 </div>
 
 <div class="card">
 <select id="nama"></select>
 <input id="alamat" readonly>
-<div class="warn" id="tunggakanInfo"></div>
+<div id="tunggakanInfo" class="warn"></div>
 </div>
 
 <div class="card">
-<label>Jumlah bulan</label>
-<input type="number" id="jumlah" value="1" min="1">
+<input type="number" id="jumlah" value="1">
 </div>
 
 <div class="card">
@@ -45,7 +107,7 @@ button{width:100%;padding:14px;background:#28a745;color:white;border:none;border
 </div>
 
 <div class="card">
-<b>Periode akan dibayar:</b>
+<b>Periode:</b>
 <div id="periodeList"></div>
 </div>
 
@@ -58,7 +120,7 @@ Total: Rp <span id="total">0</span>
 <option value="transfer">Transfer</option>
 <option value="tunai">Tunai</option>
 </select>
-<input id="ket" placeholder="Keterangan">
+<input id="ket">
 </div>
 
 <button onclick="submit()">Simpan</button>
@@ -67,52 +129,112 @@ Total: Rp <span id="total">0</span>
 
 <script>
 
-const API="https://script.google.com/macros/s/AKfycbysWMaC_ECsWqO9C4bsjIR-tZXscG8E8jwM1KDv4FZuPi_EhZfnnAzu4BekuowHl8oB5w/exec";
+const API="ISI_URL_GAS";
 
 let BIAYA = {};
 let lastPeriode = "";
 
 // =================
-// NORMALIZE PERIODE (ANTI ERROR FORMAT)
+// GET PARAM
 // =================
-function normalizePeriode(v){
+function getParam(n){
+  const url = new URL(window.location.href);
+  return url.searchParams.get(n);
+}
+
+// =================
+// NORMALIZE
+// =================
+function normalize(v){
   if(!v) return "";
 
-  // sudah format YYYY-MM
-  if(typeof v === "string" && v.length === 7 && v.includes("-")){
-    return v;
-  }
+  if(typeof v==="string" && v.length===7) return v;
 
-  // dari Date object / string panjang
-  let d = new Date(v);
+  let d=new Date(v);
   if(isNaN(d)) return "";
 
-  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0");
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
 }
 
 // =================
 // GENERATE PERIODE
 // =================
-function generatePeriode(last, jumlah){
+function generatePeriode(last,jumlah){
 
-  if(!last || jumlah <= 0) return [];
+  if(!last) return [];
 
-  let [y,m] = last.split("-").map(Number);
-  let result = [];
+  let [y,m]=last.split("-").map(Number);
+  let res=[];
 
   for(let i=1;i<=jumlah;i++){
-    let mm = m + i;
-    let yy = y;
-
-    while(mm > 12){
-      mm -= 12;
-      yy++;
-    }
-
-    result.push(yy + "-" + String(mm).padStart(2,"0"));
+    let mm=m+i,yy=y;
+    while(mm>12){mm-=12;yy++}
+    res.push(`${yy}-${String(mm).padStart(2,"0")}`);
   }
 
-  return result;
+  return res;
+}
+
+// =================
+// INIT
+// =================
+async function init(){
+
+  const warga = await fetch(API+"?action=getWarga").then(r=>r.json());
+  BIAYA = await fetch(API+"?action=getBiaya").then(r=>r.json());
+
+  const selectedNama = getParam("nama");
+
+  warga.forEach(w=>{
+    let o=document.createElement("option");
+    o.value=w.nama;
+    o.textContent=w.nama;
+
+    o.dataset.alamat=w.alamat;
+    o.dataset.keamanan=w.keamanan;
+    o.dataset.sampah=w.sampah;
+    o.dataset.pembangunan=w.pembangunan;
+    o.dataset.kas=w.kas;
+    o.dataset.last=w.bayarterakhir;
+    o.dataset.tunggakan=w.tunggakan;
+
+    if(selectedNama && selectedNama === w.nama){
+      o.selected = true;
+    }
+
+    nama.appendChild(o);
+  });
+
+  nama.addEventListener("change",onChangeUser);
+
+  nama.dispatchEvent(new Event("change"));
+}
+
+init();
+
+// =================
+// CHANGE USER
+// =================
+function onChangeUser(){
+
+  const o=nama.selectedOptions[0];
+
+  alamat.value=o.dataset.alamat;
+
+  keamanan.checked=o.dataset.keamanan==1;
+  sampah.checked=o.dataset.sampah==1;
+  pembangunan.checked=o.dataset.pembangunan==1;
+  kas.checked=o.dataset.kas==1;
+
+  lastPeriode = normalize(o.dataset.last);
+
+  let t=o.dataset.tunggakan||0;
+
+  tunggakanInfo.innerText =
+    t>0 ? "Tunggakan "+t+" bulan" : "";
+
+  hitung();
+  renderPeriode();
 }
 
 // =================
@@ -120,101 +242,36 @@ function generatePeriode(last, jumlah){
 // =================
 function renderPeriode(){
 
-  const jumlah = Number(document.getElementById("jumlah").value) || 0;
-  const el = document.getElementById("periodeList");
+  let jumlahVal = Number(jumlah.value)||0;
 
-  if(!lastPeriode){
-    el.innerHTML = "<i>Belum ada data bayar terakhir</i>";
+  let list = generatePeriode(lastPeriode,jumlahVal);
+
+  if(list.length===0){
+    periodeList.innerHTML = "<i>-</i>";
     return;
   }
 
-  const list = generatePeriode(lastPeriode, jumlah);
-
-  if(list.length === 0){
-    el.innerHTML = "<i>Tidak ada periode</i>";
-    return;
-  }
-
-  el.innerHTML = list.map(p => `<div>${p}</div>`).join("");
+  periodeList.innerHTML = list.map(p=>`<div>• ${p}</div>`).join("");
 }
 
 // =================
-// HITUNG TOTAL
+// HITUNG
 // =================
 function hitung(){
 
-  let bulan = Number(jumlah.value) || 0;
-  let per = 0;
+  let bulan=Number(jumlah.value)||0;
+  let per=0;
 
-  if(keamanan.checked) per += BIAYA.keamanan || 0;
-  if(sampah.checked) per += BIAYA.sampah || 0;
-  if(pembangunan.checked) per += BIAYA.pembangunan || 0;
-  if(kas.checked) per += BIAYA.kas || 0;
+  if(keamanan.checked) per+=BIAYA.keamanan||0;
+  if(sampah.checked) per+=BIAYA.sampah||0;
+  if(pembangunan.checked) per+=BIAYA.pembangunan||0;
+  if(kas.checked) per+=BIAYA.kas||0;
 
-  total.innerText = (per * bulan).toLocaleString("id-ID");
+  total.innerText=(per*bulan).toLocaleString("id-ID");
 }
 
 // =================
-// INIT LOAD
-// =================
-async function init(){
-
-  const warga = await fetch(API+"?action=getWarga").then(r=>r.json());
-  BIAYA = await fetch(API+"?action=getBiaya").then(r=>r.json());
-
-  const select = document.getElementById("nama");
-
-  warga.forEach(w=>{
-    let opt = document.createElement("option");
-
-    opt.value = w.nama;
-    opt.textContent = w.nama;
-
-    opt.dataset.alamat = w.alamat;
-    opt.dataset.keamanan = w.keamanan;
-    opt.dataset.sampah = w.sampah;
-    opt.dataset.pembangunan = w.pembangunan;
-    opt.dataset.kas = w.kas;
-    opt.dataset.last = w.bayarterakhir;
-    opt.dataset.tunggakan = w.tunggakan;
-
-    select.appendChild(opt);
-  });
-
-  select.addEventListener("change", onChangeUser);
-
-  select.dispatchEvent(new Event("change"));
-}
-
-init();
-
-// =================
-// SAAT PILIH WARGA
-// =================
-function onChangeUser(){
-
-  const o = nama.selectedOptions[0];
-
-  alamat.value = o.dataset.alamat;
-
-  keamanan.checked = o.dataset.keamanan == 1;
-  sampah.checked = o.dataset.sampah == 1;
-  pembangunan.checked = o.dataset.pembangunan == 1;
-  kas.checked = o.dataset.kas == 1;
-
-  lastPeriode = normalizePeriode(o.dataset.last);
-
-  let t = Number(o.dataset.tunggakan || 0);
-
-  tunggakanInfo.innerText =
-    t > 0 ? "[!!] Tunggakan " + t + " bulan" : "";
-
-  hitung();
-  renderPeriode();
-}
-
-// =================
-// EVENT LISTENER
+// EVENT
 // =================
 ["keamanan","sampah","pembangunan","kas","jumlah"]
 .forEach(id=>{
@@ -225,11 +282,18 @@ function onChangeUser(){
 });
 
 // =================
+// BACK
+// =================
+function goBack(){
+  window.location.href="dashboard.html";
+}
+
+// =================
 // SUBMIT
 // =================
 async function submit(){
 
-  const data = {
+  const data={
     action:"addIuran",
     nama:nama.value,
     alamat:alamat.value,
@@ -243,14 +307,14 @@ async function submit(){
     keterangan:ket.value
   };
 
-  const res = await fetch(API,{
+  const res=await fetch(API,{
     method:"POST",
     body:JSON.stringify(data)
   });
 
-  const r = await res.json();
+  const r=await res.json();
 
-  alert("Total: " + r.total);
+  alert("Total: "+r.total);
   location.reload();
 }
 
