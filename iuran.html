@@ -2,13 +2,15 @@
 <html lang="id">
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <style>
 *{box-sizing:border-box;}
-body{font-family:sans-serif;background:#f5f6fa;margin:0;}
+body{font-family:sans-serif;margin:0;background:#f5f6fa;}
 .container{max-width:480px;margin:auto;padding:12px;}
 .card{background:white;padding:15px;border-radius:12px;margin-bottom:12px;}
 input,select{width:100%;padding:12px;margin-top:8px;border-radius:8px;border:1px solid #ddd;}
-.check{display:flex;justify-content:space-between;padding:10px 0;}
+.check{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee;}
+.check:last-child{border:none;}
 .total{text-align:center;font-weight:bold;font-size:18px;}
 .warn{color:red;font-size:14px;}
 button{width:100%;padding:14px;background:#28a745;color:white;border:none;border-radius:10px;}
@@ -26,7 +28,8 @@ button{width:100%;padding:14px;background:#28a745;color:white;border:none;border
 </div>
 
 <div class="card">
-<input type="number" id="jumlah" value="1">
+<label>Jumlah bulan</label>
+<input type="number" id="jumlah" value="1" min="1">
 </div>
 
 <div class="card">
@@ -37,7 +40,7 @@ button{width:100%;padding:14px;background:#28a745;color:white;border:none;border
 </div>
 
 <div class="card">
-<b>Periode:</b>
+<b>Periode akan dibayar:</b>
 <div id="periodeList"></div>
 </div>
 
@@ -50,7 +53,7 @@ Total: Rp <span id="total">0</span>
 <option value="transfer">Transfer</option>
 <option value="tunai">Tunai</option>
 </select>
-<input id="ket">
+<input id="ket" placeholder="Keterangan">
 </div>
 
 <button onclick="submit()">Simpan</button>
@@ -60,114 +63,168 @@ Total: Rp <span id="total">0</span>
 <script>
 
 const API="https://script.google.com/macros/s/AKfycbysWMaC_ECsWqO9C4bsjIR-tZXscG8E8jwM1KDv4FZuPi_EhZfnnAzu4BekuowHl8oB5w/exec";
-let BIAYA={};
-let lastPeriode="";
 
+let BIAYA = {};
+let lastPeriode = "";
+
+// =================
+// NORMALIZE PERIODE (ANTI ERROR FORMAT)
+// =================
+function normalizePeriode(v){
+  if(!v) return "";
+
+  // sudah format YYYY-MM
+  if(typeof v === "string" && v.length === 7 && v.includes("-")){
+    return v;
+  }
+
+  // dari Date object / string panjang
+  let d = new Date(v);
+  if(isNaN(d)) return "";
+
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0");
+}
+
+// =================
+// GENERATE PERIODE
+// =================
+function generatePeriode(last, jumlah){
+
+  if(!last || jumlah <= 0) return [];
+
+  let [y,m] = last.split("-").map(Number);
+  let result = [];
+
+  for(let i=1;i<=jumlah;i++){
+    let mm = m + i;
+    let yy = y;
+
+    while(mm > 12){
+      mm -= 12;
+      yy++;
+    }
+
+    result.push(yy + "-" + String(mm).padStart(2,"0"));
+  }
+
+  return result;
+}
+
+// =================
+// RENDER PERIODE
+// =================
+function renderPeriode(){
+
+  const jumlah = Number(document.getElementById("jumlah").value) || 0;
+  const el = document.getElementById("periodeList");
+
+  if(!lastPeriode){
+    el.innerHTML = "<i>Belum ada data bayar terakhir</i>";
+    return;
+  }
+
+  const list = generatePeriode(lastPeriode, jumlah);
+
+  if(list.length === 0){
+    el.innerHTML = "<i>Tidak ada periode</i>";
+    return;
+  }
+
+  el.innerHTML = list.map(p => `<div>• ${p}</div>`).join("");
+}
+
+// =================
+// HITUNG TOTAL
+// =================
+function hitung(){
+
+  let bulan = Number(jumlah.value) || 0;
+  let per = 0;
+
+  if(keamanan.checked) per += BIAYA.keamanan || 0;
+  if(sampah.checked) per += BIAYA.sampah || 0;
+  if(pembangunan.checked) per += BIAYA.pembangunan || 0;
+  if(kas.checked) per += BIAYA.kas || 0;
+
+  total.innerText = (per * bulan).toLocaleString("id-ID");
+}
+
+// =================
+// INIT LOAD
 // =================
 async function init(){
 
   const warga = await fetch(API+"?action=getWarga").then(r=>r.json());
   BIAYA = await fetch(API+"?action=getBiaya").then(r=>r.json());
 
-  const sel=nama;
+  const select = document.getElementById("nama");
 
   warga.forEach(w=>{
-    let o=document.createElement("option");
-    o.value=w.nama;
-    o.textContent=w.nama;
+    let opt = document.createElement("option");
 
-    o.dataset.alamat=w.alamat;
-    o.dataset.keamanan=w.keamanan;
-    o.dataset.sampah=w.sampah;
-    o.dataset.pembangunan=w.pembangunan;
-    o.dataset.kas=w.kas;
-    o.dataset.last=w.bayarterakhir;
-    o.dataset.tunggakan=w.tunggakan;
+    opt.value = w.nama;
+    opt.textContent = w.nama;
 
-    sel.appendChild(o);
+    opt.dataset.alamat = w.alamat;
+    opt.dataset.keamanan = w.keamanan;
+    opt.dataset.sampah = w.sampah;
+    opt.dataset.pembangunan = w.pembangunan;
+    opt.dataset.kas = w.kas;
+    opt.dataset.last = w.bayarterakhir;
+    opt.dataset.tunggakan = w.tunggakan;
+
+    select.appendChild(opt);
   });
 
-  sel.dispatchEvent(new Event("change"));
+  select.addEventListener("change", onChangeUser);
+
+  select.dispatchEvent(new Event("change"));
 }
 
 init();
 
 // =================
-nama.onchange=function(){
+// SAAT PILIH WARGA
+// =================
+function onChangeUser(){
 
-  const o=this.selectedOptions[0];
+  const o = nama.selectedOptions[0];
 
-  alamat.value=o.dataset.alamat;
+  alamat.value = o.dataset.alamat;
 
-  keamanan.checked=o.dataset.keamanan==1;
-  sampah.checked=o.dataset.sampah==1;
-  pembangunan.checked=o.dataset.pembangunan==1;
-  kas.checked=o.dataset.kas==1;
+  keamanan.checked = o.dataset.keamanan == 1;
+  sampah.checked = o.dataset.sampah == 1;
+  pembangunan.checked = o.dataset.pembangunan == 1;
+  kas.checked = o.dataset.kas == 1;
 
-  lastPeriode=o.dataset.last;
+  lastPeriode = normalizePeriode(o.dataset.last);
 
-  const t=o.dataset.tunggakan||0;
+  let t = Number(o.dataset.tunggakan || 0);
 
   tunggakanInfo.innerText =
-    t>0 ? "⚠️ Tunggakan "+t+" bulan" : "";
+    t > 0 ? "⚠️ Tunggakan " + t + " bulan" : "";
 
   hitung();
   renderPeriode();
-};
-
-// =================
-function generatePeriode(last,jumlah){
-
-  if(!last) return [];
-
-  let [y,m]=last.split("-").map(Number);
-  let res=[];
-
-  for(let i=1;i<=jumlah;i++){
-    let mm=m+i, yy=y;
-    while(mm>12){mm-=12;yy++}
-    res.push(`${yy}-${String(mm).padStart(2,"0")}`);
-  }
-
-  return res;
 }
 
 // =================
-function renderPeriode(){
-
-  let jumlah=Number(jumlah.value)||0;
-
-  let list=generatePeriode(lastPeriode,jumlah);
-
-  periodeList.innerHTML = list.map(p=>`<div>${p}</div>`).join("");
-}
-
+// EVENT LISTENER
 // =================
-function hitung(){
-
-  let bulan=Number(jumlah.value)||0;
-  let per=0;
-
-  if(keamanan.checked) per+=BIAYA.keamanan||0;
-  if(sampah.checked) per+=BIAYA.sampah||0;
-  if(pembangunan.checked) per+=BIAYA.pembangunan||0;
-  if(kas.checked) per+=BIAYA.kas||0;
-
-  total.innerText=(per*bulan).toLocaleString("id-ID");
-}
-
 ["keamanan","sampah","pembangunan","kas","jumlah"]
 .forEach(id=>{
-  document.getElementById(id).addEventListener("change",()=>{
+  document.getElementById(id).addEventListener("input",()=>{
     hitung();
     renderPeriode();
   });
 });
 
 // =================
+// SUBMIT
+// =================
 async function submit(){
 
-  const data={
+  const data = {
     action:"addIuran",
     nama:nama.value,
     alamat:alamat.value,
@@ -181,14 +238,14 @@ async function submit(){
     keterangan:ket.value
   };
 
-  const res=await fetch(API,{
+  const res = await fetch(API,{
     method:"POST",
     body:JSON.stringify(data)
   });
 
-  const r=await res.json();
+  const r = await res.json();
 
-  alert("Total: "+r.total);
+  alert("Total: " + r.total);
   location.reload();
 }
 
