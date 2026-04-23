@@ -1,167 +1,98 @@
 <!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Dashboard Warga</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-body{
-  font-family:sans-serif;
-  margin:0;
-  background:#f5f6fa;
-}
-
-.header{
-  background:#007bff;
-  color:white;
-  padding:15px;
-  text-align:center;
-}
-
-.menu{
-  display:flex;
-  background:white;
-}
-
-.menu a{
-  flex:1;
-  padding:12px;
-  text-align:center;
-  text-decoration:none;
-  color:#333;
-  border-bottom:2px solid transparent;
-}
-
-.menu a.active{
-  border-bottom:2px solid #007bff;
-  font-weight:bold;
-}
-
-.container{
-  padding:10px;
-  max-width:600px;
-  margin:auto;
-}
-
-.card{
-  background:white;
-  padding:12px;
-  border-radius:10px;
-  margin-bottom:10px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-
-.info{
-  font-size:14px;
-}
-
-.badge{
-  background:#eee;
-  padding:4px 8px;
-  border-radius:6px;
-  font-size:12px;
-}
-
-.warn{
-  background:#ffdddd;
-}
-
-button{
-  padding:8px 12px;
-  border:none;
-  border-radius:8px;
-  background:#28a745;
-  color:white;
-}
-
+body{font-family:sans-serif;margin:0;background:#f5f6fa}
+.header{background:#007bff;color:white;padding:15px;text-align:center}
+.menu{display:flex;background:white}
+.menu a{flex:1;padding:12px;text-align:center;text-decoration:none;color:#333}
+.container{max-width:600px;margin:auto;padding:10px}
+.card{background:white;padding:12px;border-radius:10px;margin-bottom:10px;display:flex;justify-content:space-between}
+.badge{font-size:12px;padding:4px 8px;border-radius:6px;background:#eee}
+.warn{background:#ffcccc}
 </style>
 </head>
-
 <body>
 
-<div class="header">
-  <h3>Dashboard Warga</h3>
-</div>
+<div class="header">Dashboard Warga</div>
 
 <div class="menu">
-  <a href="#" class="active">Warga</a>
+  <a href="#">Warga</a>
   <a href="transaksi.html">Transaksi</a>
+  <a href="report.html">Report</a>
 </div>
 
-<div class="container" id="list"></div>
+<div class="container">
+
+<select id="sort">
+  <option value="rajin">Paling Rajin</option>
+  <option value="nunggak">Paling Nunggak</option>
+</select>
+
+<div id="list"></div>
+
+</div>
 
 <script>
 
-const API = "https://script.google.com/macros/s/AKfycbxJAdcpu11QGuRhjNwwC3w9Efr4EMvAEai25SQs5xtRULh30oOj6u5h4CGMDLqL0e3_AA/exec";
+const API="https://script.google.com/macros/s/AKfycby213wlg7xs-J_0rXmF-8AOqcpqsgZAsc54xM0ZHp5WJOL_x1Eyvxwq8hRILj73Vp26/exec";
+let raw=[];
 
-function el(id){ return document.getElementById(id); }
+function el(id){return document.getElementById(id);}
 
-// =======================
-function normalize(val){
-  if(!val) return "-";
+function render(data){
 
-  if(typeof val === "string" && val.length === 7) return val;
-
-  const d = new Date(val);
-  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
-}
-
-// =======================
-function pnum(p){
-  const [y,m] = p.split("-").map(Number);
-  return y*12+m;
-}
-
-// =======================
-async function load(){
-
-  const res = await fetch(API+"?action=getWarga");
-  const data = await res.json();
-
-  const container = el("list");
-  container.innerHTML = "";
-
-  const now = new Date();
-  const nowp = now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0");
+  const list=el("list");
+  list.innerHTML="";
 
   data.forEach(w=>{
 
-    const last = normalize(w.bayarterakhir);
+    const t=w.tunggakan||0;
 
-    let warn = "";
-    if(last !== "-" && pnum(last) < pnum(nowp)){
-      warn = "warn";
-    }
+    const div=document.createElement("div");
+    div.className="card";
 
-    const div = document.createElement("div");
-    div.className = "card";
-
-    div.innerHTML = `
-      <div class="info">
+    div.innerHTML=`
+      <div>
         <b>${w.nama}</b><br>
         ${w.alamat}<br>
-        <span class="badge ${warn}">Last: ${last}</span>
+        <span class="badge ${t>0?'warn':''}">
+          ${t>0?'Tunggakan '+t+' bulan':'Lancar'}
+        </span>
       </div>
-
       <button onclick="bayar('${w.nama}')">Bayar</button>
     `;
 
-    container.appendChild(div);
+    list.appendChild(div);
   });
-
 }
 
-// =======================
-function bayar(nama){
-  // redirect ke iuran dengan parameter
-  window.location.href = "iuran.html?nama=" + encodeURIComponent(nama);
+function sortData(){
+  let mode=el("sort").value;
+  let data=[...raw];
+
+  if(mode==="rajin"){
+    data.sort((a,b)=>a.tunggakan-b.tunggakan);
+  }else{
+    data.sort((a,b)=>b.tunggakan-a.tunggakan);
+  }
+
+  render(data);
 }
 
-// =======================
+function bayar(n){
+  location.href="iuran.html?nama="+encodeURIComponent(n);
+}
+
+async function load(){
+  const r=await fetch(API+"?action=getWarga");
+  raw=await r.json();
+  sortData();
+}
+
+el("sort").onchange=sortData;
+
 load();
 
 </script>
