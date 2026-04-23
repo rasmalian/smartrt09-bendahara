@@ -4,12 +4,60 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-body{font-family:sans-serif;background:#f5f6fa;margin:0;}
-.container{max-width:500px;margin:auto;padding:15px;}
-.card{background:white;padding:15px;border-radius:10px;margin-bottom:10px;}
-input,select{width:100%;padding:10px;margin:5px 0;}
-.check-item{display:flex;gap:10px;padding:5px;}
-button{width:100%;padding:12px;background:green;color:white;border:none;}
+body{
+  font-family:sans-serif;
+  margin:0;
+  background:#f5f6fa;
+}
+
+.container{
+  max-width:480px;
+  margin:auto;
+  padding:15px;
+}
+
+.card{
+  background:white;
+  padding:15px;
+  border-radius:12px;
+  margin-bottom:12px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.05);
+}
+
+input, select{
+  width:100%;
+  padding:12px;
+  margin-top:8px;
+  border-radius:8px;
+  border:1px solid #ddd;
+}
+
+.check{
+  display:flex;
+  justify-content:space-between;
+  padding:10px 0;
+  border-bottom:1px solid #eee;
+}
+
+.check:last-child{
+  border:none;
+}
+
+.total{
+  font-size:18px;
+  font-weight:bold;
+  text-align:center;
+}
+
+button{
+  width:100%;
+  padding:14px;
+  background:#28a745;
+  color:white;
+  border:none;
+  border-radius:10px;
+  font-size:16px;
+}
 </style>
 </head>
 
@@ -23,18 +71,36 @@ button{width:100%;padding:12px;background:green;color:white;border:none;}
 </div>
 
 <div class="card">
+<label>Jumlah bulan</label>
 <input type="number" id="jumlah" value="1">
 </div>
 
 <div class="card">
-<div class="check-item"><input type="checkbox" id="keamanan">Keamanan</div>
-<div class="check-item"><input type="checkbox" id="sampah">Sampah</div>
-<div class="check-item"><input type="checkbox" id="pembangunan">Pembangunan</div>
-<div class="check-item"><input type="checkbox" id="kas">Kas</div>
+
+<div class="check">
+  <label>Keamanan</label>
+  <input type="checkbox" id="keamanan">
 </div>
 
-<div class="card">
-<b>Total: Rp <span id="total">0</span></b>
+<div class="check">
+  <label>Sampah</label>
+  <input type="checkbox" id="sampah">
+</div>
+
+<div class="check">
+  <label>Pembangunan</label>
+  <input type="checkbox" id="pembangunan">
+</div>
+
+<div class="check">
+  <label>Kas</label>
+  <input type="checkbox" id="kas">
+</div>
+
+</div>
+
+<div class="card total">
+Total: Rp <span id="total">0</span>
 </div>
 
 <div class="card">
@@ -42,7 +108,8 @@ button{width:100%;padding:12px;background:green;color:white;border:none;}
 <option value="transfer">Transfer</option>
 <option value="tunai">Tunai</option>
 </select>
-<input id="ket">
+
+<input id="ket" placeholder="Keterangan">
 </div>
 
 <button onclick="submit()">Simpan</button>
@@ -51,17 +118,18 @@ button{width:100%;padding:12px;background:green;color:white;border:none;}
 
 <script>
 
-const API="https://script.google.com/macros/s/AKfycbxpMY3NMidcrB8oYd6PQ-7QaHOSH1X9B02C1cQ_RfaWwCirsfXQkLhox5FLz3Gu6_APqA/exec";
-
+const API="ISI_URL_GAS";
 let BIAYA={};
 
-// ===================
+// =================
 // INIT
-// ===================
+// =================
 async function init(){
 
   const warga = await fetch(API+"?action=getWarga").then(r=>r.json());
   BIAYA = await fetch(API+"?action=getBiaya").then(r=>r.json());
+
+  console.log("BIAYA:", BIAYA); // DEBUG
 
   const select=document.getElementById("nama");
 
@@ -84,38 +152,37 @@ async function init(){
 
 init();
 
-// ===================
+// =================
 // AUTO CHECKBOX
-// ===================
-document.getElementById("nama").onchange=function(){
+// =================
+nama.onchange=function(){
 
   const o=this.selectedOptions[0];
 
-  document.getElementById("alamat").value=o.dataset.alamat;
+  alamat.value=o.dataset.alamat;
 
-  document.getElementById("keamanan").checked = o.dataset.keamanan==1;
-  document.getElementById("sampah").checked = o.dataset.sampah==1;
-  document.getElementById("pembangunan").checked = o.dataset.pembangunan==1;
-  document.getElementById("kas").checked = o.dataset.kas==1;
+  keamanan.checked = o.dataset.keamanan==1;
+  sampah.checked = o.dataset.sampah==1;
+  pembangunan.checked = o.dataset.pembangunan==1;
+  kas.checked = o.dataset.kas==1;
 
   hitung();
 };
 
-// ===================
-// HITUNG TOTAL
-// ===================
+// =================
+// HITUNG
+// =================
 function hitung(){
 
-  let perBulan=0;
-  let bulan=Number(document.getElementById("jumlah").value)||0;
+  let bulan = Number(jumlah.value)||0;
+  let per=0;
 
-  if(document.getElementById("keamanan").checked) perBulan+=BIAYA.keamanan||0;
-  if(document.getElementById("sampah").checked) perBulan+=BIAYA.sampah||0;
-  if(document.getElementById("pembangunan").checked) perBulan+=BIAYA.pembangunan||0;
-  if(document.getElementById("kas").checked) perBulan+=BIAYA.kas||0;
+  if(keamanan.checked) per += BIAYA["keamanan"]||0;
+  if(sampah.checked) per += BIAYA["sampah"]||0;
+  if(pembangunan.checked) per += BIAYA["pembangunan"]||0;
+  if(kas.checked) per += BIAYA["kas"]||0;
 
-  document.getElementById("total").innerText =
-    (perBulan*bulan).toLocaleString("id-ID");
+  total.innerText = (per*bulan).toLocaleString("id-ID");
 }
 
 ["keamanan","sampah","pembangunan","kas","jumlah"]
@@ -123,9 +190,9 @@ function hitung(){
   document.getElementById(id).addEventListener("change",hitung);
 });
 
-// ===================
+// =================
 // SUBMIT
-// ===================
+// =================
 async function submit(){
 
   const data={
