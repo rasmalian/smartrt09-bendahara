@@ -12,19 +12,16 @@ body{
   margin:0;
 }
 
-/* TOPBAR */
 .topbar{
   display:flex;
   align-items:center;
   gap:10px;
   padding:10px;
   background:white;
-  box-shadow:0 2px 5px rgba(0,0,0,0.05);
 }
 
 .topbar button{
-  width:40px;
-  height:40px;
+  width:40px;height:40px;
   border:none;
   border-radius:50%;
   background:#007bff;
@@ -32,7 +29,6 @@ body{
   font-size:18px;
 }
 
-/* CONTAINER */
 .container{
   max-width:500px;
   margin:auto;
@@ -43,37 +39,63 @@ body{
   background:white;
   padding:15px;
   border-radius:10px;
-  margin-bottom:10px;
 }
 
-/* INPUT */
 input,select{
   width:100%;
   padding:12px;
   margin:6px 0;
   border-radius:8px;
   border:1px solid #ddd;
-  font-size:14px;
 }
 
-/* BUTTON */
-button.submit{
+button{
   width:100%;
   padding:14px;
   background:#28a745;
   color:white;
   border:none;
   border-radius:10px;
-  font-size:16px;
 }
 
+/* LOADING */
+#loadingOverlay{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.4);
+  z-index:9999;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+  color:white;
+}
+
+.spinner{
+  width:50px;height:50px;
+  border:5px solid #fff;
+  border-top:5px solid transparent;
+  border-radius:50%;
+  animation:spin 1s linear infinite;
+  margin-bottom:10px;
+}
+
+@keyframes spin{
+  0%{transform:rotate(0);}
+  100%{transform:rotate(360deg);}
+}
 </style>
 </head>
 
 <body>
 
+<div id="loadingOverlay">
+  <div class="spinner"></div>
+  <div>Memproses...</div>
+</div>
+
 <div class="topbar">
-  <button onclick="goBack()">&#8592;</button>
+  <button onclick="history.back()">&#8592;</button>
   <b>Transaksi</b>
 </div>
 
@@ -81,65 +103,74 @@ button.submit{
 
 <div class="card">
 
-  <label>Jenis</label>
-  <select id="jenis">
-    <option value="pemasukan">Pemasukan</option>
-    <option value="pengeluaran">Pengeluaran</option>
-  </select>
+<select id="jenis">
+  <option value="pemasukan">Pemasukan</option>
+  <option value="pengeluaran">Pengeluaran</option>
+</select>
 
-  <label>Tanggal</label>
-  <input type="date" id="tanggal">
-
-  <label>Kategori</label>
-  <input id="kategori" placeholder="Contoh: kerja bhakti">
-
-  <label>Nominal</label>
-  <input type="number" id="nilai">
-
-  <label>Keterangan</label>
-  <input id="ket">
+<input type="date" id="tanggal">
+<input id="kategori" placeholder="Kategori">
+<input type="number" id="nilai" placeholder="Nominal">
+<input id="ket" placeholder="Keterangan">
 
 </div>
 
-<button class="submit" onclick="submit()">Simpan</button>
+<button onclick="submit()">Simpan</button>
 
 </div>
 
 <script>
 
-const API="https://script.google.com/macros/s/AKfycbzlylLsNCxlslKyVlCbODBYIwEkwVONcNwqbVitaq3ZFKti_km2s_r4pvJn9p2fQcxyYg/exec";
+const API="https://script.google.com/macros/s/AKfycbxZ8P3aFHOvp83AQpNcGucOQPC-vtjHhcGgzoLIERkq_JDpEW0Qk4ww3BKooT-fN2YGAQ/exec";
 
-function el(id){return document.getElementById(id);}
-
-function goBack(){
-  if(document.referrer){
-    history.back();
-  }else{
-    location.href="index.html";
-  }
+function showLoading(){
+  document.getElementById("loadingOverlay").style.display="flex";
+}
+function hideLoading(){
+  document.getElementById("loadingOverlay").style.display="none";
 }
 
-el("tanggal").value=new Date().toISOString().split("T")[0];
+let lock=false;
 
 async function submit(){
 
-  const data={
-    action:"addTransaksiManual",
-    jenis:el("jenis").value,
-    tanggal:el("tanggal").value,
-    kategori:el("kategori").value,
-    nilai:parseInt(el("nilai").value),
-    keterangan:el("ket").value
-  };
+  if(lock) return;
+  lock=true;
 
-  await fetch(API,{
-    method:"POST",
-    body:JSON.stringify(data)
-  });
+  showLoading();
 
-  alert("Tersimpan");
-  location.reload();
+  try{
+
+    const data={
+      action:"addTransaksiManual",
+      jenis:document.getElementById("jenis").value,
+      tanggal:document.getElementById("tanggal").value,
+      kategori:document.getElementById("kategori").value,
+      nilai:document.getElementById("nilai").value,
+      keterangan:document.getElementById("ket").value
+    };
+
+    await fetch(API,{
+      method:"POST",
+      body:JSON.stringify(data)
+    });
+
+    hideLoading();
+    lock=false;
+
+    alert("Tersimpan");
+    location.reload();
+
+  }catch(e){
+    hideLoading();
+    lock=false;
+    alert("Error");
+  }
+
 }
+
+document.getElementById("tanggal").value=
+new Date().toISOString().split("T")[0];
 
 </script>
 
