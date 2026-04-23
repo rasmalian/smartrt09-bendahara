@@ -1,18 +1,42 @@
 <!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Report Transaksi</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
 body{font-family:sans-serif;background:#f5f6fa;margin:0}
+
+.topbar{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px;
+  background:white;
+  box-shadow:0 2px 5px rgba(0,0,0,0.05);
+}
+
+.topbar button{
+  width:40px;height:40px;border:none;border-radius:50%;
+  background:#007bff;color:white;font-size:18px;
+}
+
 .container{max-width:500px;margin:auto;padding:15px}
-.card{background:white;padding:12px;border-radius:10px;margin-bottom:10px}
-input,button{width:100%;padding:12px;margin:5px 0;border-radius:8px;border:1px solid #ddd}
-button{background:#007bff;color:white;border:none}
-.summary{background:#eef6ff}
-.row{display:flex;justify-content:space-between}
+
+.card{
+  background:white;
+  padding:12px;
+  border-radius:10px;
+  margin-bottom:10px;
+}
+
+input{
+  width:100%;
+  padding:12px;
+  margin:5px 0;
+  border-radius:8px;
+  border:1px solid #ddd;
+}
+
 .plus{color:green}
 .minus{color:red}
 </style>
@@ -20,110 +44,70 @@ button{background:#007bff;color:white;border:none}
 
 <body>
 
+<div class="topbar">
+  <button onclick="goBack()">←</button>
+  <b>Report</b>
+</div>
+
 <div class="container">
 
 <div class="card">
-  <label>Pilih Bulan (opsional)</label>
   <input type="month" id="bulan">
-  <button onclick="load()">Load Manual</button>
+  <button onclick="load()">Load</button>
 </div>
 
-<div class="card summary" id="summary">
-  Loading...
-</div>
-
+<div class="card" id="summary"></div>
 <div id="list"></div>
 
 </div>
 
 <script>
 
-const API = "https://script.google.com/macros/s/AKfycby213wlg7xs-J_0rXmF-8AOqcpqsgZAsc54xM0ZHp5WJOL_x1Eyvxwq8hRILj73Vp26/exec";
+const API="https://script.google.com/macros/s/AKfycby213wlg7xs-J_0rXmF-8AOqcpqsgZAsc54xM0ZHp5WJOL_x1Eyvxwq8hRILj73Vp26/exec";
 
-function el(id){ return document.getElementById(id); }
+function el(id){return document.getElementById(id);}
 
-// =======================
-// FORMAT TANGGAL
-// =======================
-function formatDate(d){
-  if(!d) return "-";
-  const date = new Date(d);
-  if(isNaN(date)) return d;
-  return date.toLocaleDateString("id-ID");
+function goBack(){
+  location.href="index.html";
 }
 
-// =======================
-// LOAD REPORT
-// =======================
 async function load(){
 
-  const ym = el("bulan").value;
+  const ym=el("bulan").value;
 
-  let url = API + "?action=getReport";
+  let url=API+"?action=getReport";
+  if(ym) url+="&ym="+ym;
 
-  // hanya kirim jika ada
-  if(ym){
-    url += "&ym=" + ym;
-  }
+  const res=await fetch(url);
+  const data=await res.json();
 
-  try{
+  let total=0;
 
-    const res = await fetch(url);
-    const data = await res.json();
+  el("list").innerHTML="";
 
-    console.log("REPORT:", data);
+  data.forEach(r=>{
+    const val=Number(r.nilai)||0;
+    total+=val;
 
-    let total = 0;
-    let masuk = 0;
-    let keluar = 0;
+    const div=document.createElement("div");
+    div.className="card";
 
-    const list = el("list");
-    list.innerHTML = "";
-
-    data.forEach(r=>{
-
-      const nilai = Number(r.nilai) || 0;
-
-      total += nilai;
-
-      if(nilai > 0) masuk += nilai;
-      if(nilai < 0) keluar += nilai;
-
-      const div = document.createElement("div");
-      div.className = "card";
-
-      div.innerHTML = `
-        <div>${formatDate(r.tanggal)}</div>
-        <div>${r.kategori || "-"}</div>
-        <div class="${nilai>=0?'plus':'minus'}">
-          ${nilai.toLocaleString()}
-        </div>
-      `;
-
-      list.appendChild(div);
-    });
-
-    const periodeLabel = ym ? ym : "Bulan Ini";
-
-    el("summary").innerHTML = `
-      <b>Periode: ${periodeLabel}</b><br><br>
-      <div class="row"><span>Total</span><b>${total.toLocaleString()}</b></div>
-      <div class="row"><span>Pemasukan</span><span class="plus">${masuk.toLocaleString()}</span></div>
-      <div class="row"><span>Pengeluaran</span><span class="minus">${keluar.toLocaleString()}</span></div>
+    div.innerHTML=`
+      ${r.tanggal}<br>
+      ${r.kategori}<br>
+      <b class="${val>=0?'plus':'minus'}">${val}</b>
     `;
 
-  }catch(err){
-    alert("Gagal load report");
-    console.error(err);
-  }
+    el("list").appendChild(div);
+  });
+
+  el("summary").innerHTML=`
+    Periode: ${ym||"Bulan Ini"}<br>
+    Total: ${total}
+  `;
 }
 
-// =======================
-// AUTO LOAD BULAN INI
-// =======================
-window.onload = function(){
-  load();
-};
+window.onload=load;
 
 </script>
 
