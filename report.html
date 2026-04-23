@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body{font-family:sans-serif;background:#f5f6fa;margin:0}
+.container{max-width:500px;margin:auto;padding:15px}
+.card{background:white;padding:15px;border-radius:10px;margin-bottom:10px}
+input,button{width:100%;padding:12px;margin:5px 0}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<div class="card">
+  <input type="month" id="bulan">
+  <button onclick="load()">Load Report</button>
+</div>
+
+<div class="card" id="summary"></div>
+
+<div id="list"></div>
+
+</div>
+
+<script>
+
+const API="https://script.google.com/macros/s/AKfycby213wlg7xs-J_0rXmF-8AOqcpqsgZAsc54xM0ZHp5WJOL_x1Eyvxwq8hRILj73Vp26/exec";
+
+function el(id){return document.getElementById(id);}
+
+async function load(){
+
+  const ym = el("bulan").value;
+  if(!ym) return alert("Pilih bulan");
+
+  const res = await fetch(API+"?action=getReport&ym="+ym);
+  const data = await res.json();
+
+  console.log(data);
+
+  let total=0;
+
+  const list = el("list");
+  list.innerHTML="";
+
+  data.forEach(r=>{
+    const nilai = Number(r.nilai)||0;
+    total += nilai;
+
+    const div=document.createElement("div");
+    div.className="card";
+
+    div.innerHTML=`
+      ${r.tanggal}<br>
+      ${r.kategori}<br>
+      <b>${nilai}</b>
+    `;
+
+    list.appendChild(div);
+  });
+
+  el("summary").innerHTML = `
+    <b>Total: ${total}</b>
+  `;
+}
+
+</script>
+
+</body>
+</html>
