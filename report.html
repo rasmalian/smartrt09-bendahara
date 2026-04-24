@@ -78,6 +78,29 @@ input[type="month"]:focus{
   box-shadow:0 0 0 2px rgba(0,123,255,0.2);
 }
 
+ /* pastikan semua elemen aman */
+*{
+  box-sizing: border-box;
+}
+
+/* bungkus input biar aman */
+.input-wrap{
+  width:100%;
+  overflow:hidden;
+}
+
+/* month picker */
+input[type="month"]{
+  width:100%;
+  max-width:100%;
+  padding:12px;
+  border-radius:8px;
+  border:1px solid #ddd;
+  font-size:16px;
+  background:white;
+  display:block;
+} 
+
 </style>
 </head>
 
@@ -92,7 +115,9 @@ input[type="month"]:focus{
 
 <div class="card">
   <label>Pilih Bulan</label>
+  <div class="input-wrap">
   <input type="month" id="bulan">
+  </div>
   <br><br>
   <button class="main" onclick="load()">Load</button>
 </div>
