@@ -123,6 +123,7 @@ function render(data){
       <div>
         <b>${w.nama}</b><br>
         ${w.alamat}<br>
+        <small>Terakhir bayar: ${w.bayarterakhir || "-"}</small>
         <span class="badge ${t>0?'warn':''}">
           ${t>0?'Tunggakan '+t+' bulan':'Lancar'}
         </span>
