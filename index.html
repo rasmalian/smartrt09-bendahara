@@ -162,6 +162,19 @@ el("sort").onchange=sortData;
 
 load();
 
+function getParam(n){
+  return new URL(window.location.href).searchParams.get(n);
+}
+
+window.onload = function(){
+
+  if(getParam("reload")){
+    console.log("Data baru masuk, refresh dashboard");
+  }
+
+  loadWarga(); // function kamu
+}  
+
 </script>
 
 </body>
