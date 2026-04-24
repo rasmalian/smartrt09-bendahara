@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{
+  font-family:sans-serif;
+  background:#f5f6fa;
+  margin:0;
+}
+
+.topbar{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px;
+  background:white;
+}
+
+.topbar button{
+  width:40px;height:40px;
+  border:none;
+  border-radius:50%;
+  background:#007bff;
+  color:white;
+}
+
+.container{
+  padding:10px;
+  overflow:auto;
+}
+
+.card{
+  background:white;
+  padding:10px;
+  border-radius:10px;
+  margin-bottom:10px;
+}
+
+select{
+  width:100%;
+  padding:10px;
+  border-radius:8px;
+  border:1px solid #ddd;
+}
+
+table{
+  border-collapse:collapse;
+  width:max-content;
+  min-width:100%;
+  font-size:12px;
+}
+
+th,td{
+  border:1px solid #ddd;
+  padding:6px;
+  text-align:center;
+}
+
+th{
+  background:#007bff;
+  color:white;
+}
+
+.name{
+  text-align:left;
+  font-weight:bold;
+}
+
+/* warna sub kolom */
+.th-ka{background:#4caf50 !important;}
+.th-sa{background:#ff9800 !important;}
+.th-pe{background:#9c27b0 !important;}
+.th-kas{background:#607d8b !important;}
+
+/* separator bulan */
+.sep{
+  border-left:3px solid black !important;
+}
+
+/* loading */
+#loading{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.4);
+  justify-content:center;
+  align-items:center;
+  color:white;
+  z-index:9999;
+}
+</style>
+</head>
+
+<body>
+
+<div id="loading">Loading...</div>
+
+<div class="topbar">
+  <button onclick="history.back()">←</button>
+  <b>Report Warga</b>
+</div>
+
+<div class="container">
+
+<div class="card">
+  <select id="tahun"></select>
+</div>
+
+<div class="card" id="tableWrap"></div>
+
+</div>
+
+<script>
+
+const API="https://script.google.com/macros/s/AKfycbyXvnRG7GwCcDFh0rkvfeOMude5C0S9HZPVJwlX33sKSEudeMgAea1gHGnga5U8d1cbMw/exec";
+
+function showLoading(){loading.style.display="flex";}
+function hideLoading(){loading.style.display="none";}
+
+// ================= INIT TAHUN
+function initTahun(){
+  const now=new Date().getFullYear();
+
+  for(let i=now;i>=now-5;i--){
+    let opt=document.createElement("option");
+    opt.value=i;
+    opt.textContent=i;
+    tahun.appendChild(opt);
+  }
+
+  tahun.value=now;
+  tahun.onchange=load;
+}
+
+// ================= LOAD DATA
+async function load(){
+
+  showLoading();
+
+  try{
+
+    const year=tahun.value;
+
+    const res=await fetch(API+"?action=getIuranWarga");
+    const data=await res.json();
+
+    let map={};
+
+    data.forEach(r=>{
+      if(!r.nama) return;
+
+      if(!map[r.nama]){
+        map[r.nama]={
+          alamat:r.alamat,
+          data:{}
+        };
+      }
+
+      map[r.nama].data[r.periode]=r;
+    });
+
+    render(map,year);
+
+  }finally{
+    hideLoading();
+  }
+}
+
+// ================= RENDER
+function render(map,year){
+
+  let html="<table>";
+
+  // HEADER 1
+  html+="<tr><th rowspan='2'>Nama</th><th rowspan='2'>Alamat</th>";
+
+  for(let m=1;m<=12;m++){
+    let mm=String(m).padStart(2,"0");
+    html+=`<th colspan="4">${year}-${mm}</th>`;
+  }
+
+  html+="</tr>";
+
+  // HEADER 2 (KA SA PE KAS)
+  html+="<tr>";
+
+  for(let i=0;i<12;i++){
+    html+=`
+      <th class="th-ka">KA</th>
+      <th class="th-sa">SA</th>
+      <th class="th-pe">PE</th>
+      <th class="th-kas">KAS</th>
+    `;
+  }
+
+  html+="</tr>";
+
+  // DATA
+  Object.keys(map).forEach(nama=>{
+
+    let w=map[nama];
+
+    html+=`<tr>
+      <td class="name">${nama}</td>
+      <td>${w.alamat}</td>
+    `;
+
+    for(let m=1;m<=12;m++){
+
+      let mm=String(m).padStart(2,"0");
+      let key=`${year}-${mm}`;
+      let d=w.data[key];
+
+      html+=`
+        <td class="sep">${d && d.keamanan==1 ? "✔" : ""}</td>
+        <td>${d && d.sampah==1 ? "✔" : ""}</td>
+        <td>${d && d.pembangunan==1 ? "✔" : ""}</td>
+        <td>${d && d.kas==1 ? "✔" : ""}</td>
+      `;
+    }
+
+    html+="</tr>";
+  });
+
+  html+="</table>";
+
+  tableWrap.innerHTML=html;
+}
+
+// ================= START
+initTahun();
+load();
+
+</script>
+
+</body>
+</html>
