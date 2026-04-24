@@ -123,12 +123,34 @@ button{
 
 const API="https://script.google.com/macros/s/AKfycby4skg8yWNJjAC4bUlOUi1XV3LmT1y3nEXVFdWPcVI461y3MWksXRRHQjytvhPpvNkNtA/exec";
 
+function formatRupiah(angka){
+  return Number(angka).toLocaleString("id-ID");
+}
+
+function cleanNumber(str){
+  return str.replace(/\D/g,''); // hapus titik, huruf, dll
+}  
 function showLoading(){
   document.getElementById("loadingOverlay").style.display="flex";
 }
 function hideLoading(){
   document.getElementById("loadingOverlay").style.display="none";
 }
+
+
+const nominalInput = document.getElementById("nilai");
+
+nominalInput.addEventListener("input", function(e){
+
+  let value = cleanNumber(e.target.value);
+
+  if(!value){
+    e.target.value = "";
+    return;
+  }
+
+  e.target.value = formatRupiah(value);
+});  
 
 let lock=false;
 
@@ -146,7 +168,7 @@ async function submit(){
       jenis:document.getElementById("jenis").value,
       tanggal:document.getElementById("tanggal").value,
       kategori:document.getElementById("kategori").value,
-      nilai:document.getElementById("nilai").value,
+      nilai:cleanNumber(document.getElementById("nilai").value);,
       keterangan:document.getElementById("ket").value
     };
 
