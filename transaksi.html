@@ -110,7 +110,7 @@ button{
 
 <input type="date" id="tanggal">
 <input id="kategori" placeholder="Kategori">
-<input type="number" id="nilai" placeholder="Nominal">
+<input type="text" id="nilai" placeholder="Nominal">
 <input id="ket" placeholder="Keterangan">
 
 </div>
@@ -168,7 +168,7 @@ async function submit(){
       jenis:document.getElementById("jenis").value,
       tanggal:document.getElementById("tanggal").value,
       kategori:document.getElementById("kategori").value,
-      nilai:cleanNumber(document.getElementById("nilai").value);,
+      nilai:Number(cleanNumber(document.getElementById("nilai").value)),
       keterangan:document.getElementById("ket").value
     };
 
