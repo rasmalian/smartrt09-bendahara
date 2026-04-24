@@ -54,6 +54,30 @@ button.main{
 
 .plus{color:green}
 .minus{color:red}
+
+/* ✅ FIX MONTH PICKER */
+input[type="month"]{
+  width:100%;
+  padding:12px;
+  border-radius:8px;
+  border:1px solid #ddd;
+  font-size:16px;
+  background:white;
+}
+
+/* icon calendar */
+input[type="month"]::-webkit-calendar-picker-indicator{
+  cursor:pointer;
+  opacity:0.7;
+}
+
+/* focus effect */
+input[type="month"]:focus{
+  outline:none;
+  border:1px solid #007bff;
+  box-shadow:0 0 0 2px rgba(0,123,255,0.2);
+}
+
 </style>
 </head>
 
@@ -67,6 +91,7 @@ button.main{
 <div class="container">
 
 <div class="card">
+  <label>Pilih Bulan</label>
   <input type="month" id="bulan">
   <br><br>
   <button class="main" onclick="load()">Load</button>
@@ -95,7 +120,7 @@ z-index:9999;
     border-radius:10px;
     box-shadow:0 2px 10px rgba(0,0,0,0.1);
   ">
-     Loading...
+     ⏳ Loading...
   </div>
 </div>
 
@@ -170,7 +195,12 @@ async function load(){
   }
 }
 
-window.onload = load;
+/* ✅ AUTO SET BULAN SEKARANG */
+window.onload = () => {
+  const now = new Date();
+  el("bulan").value = now.toISOString().slice(0,7);
+  load();
+};
 
 </script>
 
