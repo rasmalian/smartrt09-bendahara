@@ -146,9 +146,16 @@ border-radius:10px;
 box-shadow:0 2px 10px rgba(0,0,0,0.1);
 "> Memproses...</div>
 </div>
+  
 
 <script>
+function formatRupiah(angka){
+  return Number(angka).toLocaleString("id-ID");
+}
 
+function cleanNumber(str){
+  return str.replace(/\D/g,''); // hapus titik, huruf, dll
+}
 const API="https://script.google.com/macros/s/AKfycbyEvc4ntv7M3bIMxkIRmRLM0sa-_-6uJnIh9uvAzzPBo5HlD9QmUEpIWpmZgOTYUVX4pQ/exec";
 
 let BIAYA={}, lastPeriode="";
@@ -277,7 +284,7 @@ async function submit(){
     });
 
     const r=await res.json();
-    alert("Total: "+r.total);
+    alert("Total: "+ formatRupiah(r.total));
     window.location.href = "index.html?reload=1";
   }catch(e){
     alert("Error");
