@@ -124,6 +124,9 @@ Total: Rp <span id="total">0</span>
     Tanggal Bayar
 </label>
 <input type="date" id="tanggal_bayar">
+<label style="font-size:13px;color:#666;margin-top:6px;display:block;">
+    Keterangan
+</label>
   
 <input id="ket">
 </div>
@@ -293,7 +296,8 @@ async function submit(){
         pembangunan:pembangunan.checked?1:0,
         kas:kas.checked?1:0,
         metode:metode.value,
-        keterangan:ket.value
+        keterangan:ket.value,
+        tanggal_bayar:tanggal_bayar.value
       })
     });
 
