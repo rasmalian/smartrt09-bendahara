@@ -87,6 +87,7 @@ button{
   <a href="#">Warga</a>
   <a href="transaksi.html">Transaksi</a>
   <a href="report.html">Report</a>
+  <a href="summarytahunan.html">Summary</a>
 </div>
 
 <div class="container">
@@ -128,6 +129,7 @@ function render(data){
           ${t>0?'Tunggakan '+t+' bulan':'Lancar'}
         </span>
       </div>
+      <button onclick="summary('${w.nama}')">Rincian</button>
       <button onclick="bayar('${w.nama}')">Bayar</button>
     `;
 
@@ -151,7 +153,9 @@ function sortData(){
 function bayar(n){
   location.href="iuran.html?nama="+encodeURIComponent(n);
 }
-
+function summary(n){
+  location.href="summarywarga.html?nama="+encodeURIComponent(n);
+}
 async function load(){
   const r=await fetch(API+"?action=getWarga");
   raw=await r.json();
