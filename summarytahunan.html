@@ -166,6 +166,15 @@ tbody tr:nth-child(even){
 
 <script>
 
+function goSummary(nama){
+  const year = document.getElementById("tahun").value;
+
+  location.href =
+    "summarywarga.html?nama=" +
+    encodeURIComponent(nama) +
+    "&year=" + year;
+}  
+
 const API = "https://script.google.com/macros/s/AKfycbwyDkIMsu9DhMBE03QxvntRGwCm5a64BRb5SKEddnx7wdkWgRuWw6HLzUanAAGG9cSH1w/exec"; // ganti
 
 function showLoading(){
@@ -232,7 +241,7 @@ async function load(){
       const w = data[nama];
 
       html += `<tr>`;
-      html += `<td>${nama}</td>`;
+      html += `<td><span class="link" onclick="goSummary('${nama}')"> ${nama}</span></td>`;
       html += `<td>${w.alamat || ""}</td>`;
 
       months.forEach(m=>{
