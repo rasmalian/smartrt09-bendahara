@@ -1,36 +1,92 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-body{font-family:sans-serif;background:#f5f6fa;margin:0;}
-.topbar{display:flex;align-items:center;gap:10px;padding:10px;background:white;}
-.topbar button{width:40px;height:40px;border:none;border-radius:50%;background:#007bff;color:white;}
-.container{padding:10px;overflow:auto;}
-.card{background:white;padding:10px;border-radius:10px;margin-bottom:10px;}
-select{width:100%;padding:10px;border-radius:8px;border:1px solid #ddd;}
-table{border-collapse:collapse;width:max-content;min-width:100%;}
-td,th{border:1px solid #ddd;padding:6px;text-align:center;font-size:12px;}
-.name{cursor:pointer;text-align:left;font-weight:bold;color:#007bff;}
+*{box-sizing:border-box;}
 
- .table-wrap{
+body{
+  font-family:sans-serif;
+  background:#f5f6fa;
+  margin:0;
+}
+
+/* TOPBAR */
+.topbar{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px;
+  background:white;
+}
+
+.topbar button{
+  width:40px;
+  height:40px;
+  border:none;
+  border-radius:50%;
+  background:#007bff;
+  color:white;
+  font-size:16px;
+  cursor:pointer;
+}
+
+/* CONTAINER FULL */
+.container{
+  width:100%;
+  padding:10px;
+}
+
+/* FILTER */
+.filter{
+  background:white;
+  padding:10px;
+  border-radius:10px;
+  margin-bottom:10px;
+}
+
+/* INPUT */
+input{
+  width:100%;
+  padding:10px;
+  border-radius:8px;
+  border:1px solid #ddd;
+}
+
+/* BUTTON */
+button.main{
+  width:100%;
+  padding:12px;
+  background:#007bff;
+  color:white;
+  border:none;
+  border-radius:8px;
+  margin-top:10px;
+  cursor:pointer;
+}
+
+/* TABLE WRAP */
+.table-wrap{
   width:100%;
   overflow-x:auto;
 }
 
+/* TABLE */
 table{
   border-collapse:collapse;
-  min-width:800px;
+  min-width:1000px;
+  background:white;
 }
 
 th, td{
   border:1px solid #ddd;
   padding:6px;
   text-align:center;
+  font-size:12px;
 }
 
+/* HEADER */
 th{
   position:sticky;
   top:0;
@@ -38,93 +94,181 @@ th{
   z-index:2;
 }
 
+/* NAMA */
 td:first-child, th:first-child{
   position:sticky;
   left:0;
   background:white;
   z-index:1;
-} 
+  text-align:left;
+  min-width:120px;
+}
+
+/* ALAMAT */
+td:nth-child(2), th:nth-child(2){
+  position:sticky;
+  left:120px;
+  background:white;
+  z-index:1;
+  text-align:left;
+  min-width:140px;
+}
+
+/* ZEBRA */
+tbody tr:nth-child(even){
+  background:#f9fafb;
+}
+
+/* STATUS */
+.ok{
+  color:green;
+  font-weight:bold;
+}
+.no{
+  color:#ccc;
+}
+
+/* LOADING */
+#loading{
+  position:fixed;
+  inset:0;
+  background:rgba(255,255,255,0.8);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+}
 </style>
 </head>
 
 <body>
 
 <div class="topbar">
-  <button onclick="history.back()">←</button>
+  <button onclick="goBack()">&#8592;</button>
   <b>Summary Tahunan</b>
 </div>
 
 <div class="container">
 
-<div class="card">
-  <select id="tahun"></select>
+  <div class="filter">
+    <label>Tahun</label>
+    <input type="number" id="tahun">
+    <button class="main" onclick="load()">Load</button>
+  </div>
+
+  <div class="table-wrap">
+    <table id="tbl"></table>
+  </div>
+
 </div>
 
-<div class="card" id="wrap"></div>
-
-</div>
+<div id="loading">Loading...</div>
 
 <script>
 
-const API="https://script.google.com/macros/s/AKfycbwyDkIMsu9DhMBE03QxvntRGwCm5a64BRb5SKEddnx7wdkWgRuWw6HLzUanAAGG9cSH1w/exec";
+const API = "https://script.google.com/macros/s/AKfycbwyDkIMsu9DhMBE03QxvntRGwCm5a64BRb5SKEddnx7wdkWgRuWw6HLzUanAAGG9cSH1w/exec"; // ganti
 
-function initTahun(){
-  const now=new Date().getFullYear();
-  for(let i=now;i>=now-5;i--){
-    let o=document.createElement("option");
-    o.value=i;
-    o.textContent=i;
-    tahun.appendChild(o);
+function showLoading(){
+  document.getElementById("loading").style.display="flex";
+}
+function hideLoading(){
+  document.getElementById("loading").style.display="none";
+}
+
+function goBack(){
+  if(document.referrer){
+    history.back();
+  }else{
+    location.href="index.html";
   }
-  tahun.value=now;
-  tahun.onchange=load;
+}
+
+function el(id){
+  return document.getElementById(id);
+}
+
+function buildMonths(year){
+  let arr=[];
+  for(let i=1;i<=12;i++){
+    arr.push(year+"-"+String(i).padStart(2,"0"));
+  }
+  return arr;
+}
+
+/* FORMAT TANGGAL AMAN */
+function formatTanggal(v){
+  if(!v) return "";
+
+  let d = new Date(v);
+  if(isNaN(d)) return "";
+
+  return d.toLocaleDateString("id-ID");
 }
 
 async function load(){
 
-  const year = tahun.value;
+  showLoading();
 
-  const res = await fetch(API+`?action=getSummary&mode=all&year=${year}`);
-  const data = await res.json();
+  try{
 
-  let html="<table>";
+    const year = el("tahun").value;
 
-  html+="<tr><th>Nama</th><th>Alamat</th>";
+    const res = await fetch(API+"?action=getSummary&year="+year);
+    const data = await res.json();
 
-  for(let m=1;m<=12;m++){
-    html+=`<th>${year}-${String(m).padStart(2,"0")}</th>`;
+    const months = buildMonths(year);
+
+    let html = "<thead><tr>";
+    html += "<th>Nama</th><th>Alamat</th>";
+
+    months.forEach(m=>{
+      html += `<th>${m}</th>`;
+    });
+
+    html += "</tr></thead><tbody>";
+
+    Object.keys(data).forEach(nama=>{
+
+      const w = data[nama];
+
+      html += `<tr>`;
+      html += `<td>${nama}</td>`;
+      html += `<td>${w.alamat || ""}</td>`;
+
+      months.forEach(m=>{
+
+        let cell = w.bulan[m];
+
+        if(cell && cell.tanggal_bayar){
+          html += `<td class="ok">
+            ${formatTanggal(cell.tanggal_bayar)}
+          </td>`;
+        }else{
+          html += `<td class="no">-</td>`;
+        }
+
+      });
+
+      html += `</tr>`;
+
+    });
+
+    html += "</tbody>";
+
+    el("tbl").innerHTML = html;
+
+  }catch(e){
+    alert("Gagal load data");
+  }finally{
+    hideLoading();
   }
-
-  html+="</tr>";
-
-  Object.keys(data).forEach(nama=>{
-
-    let w=data[nama];
-
-    html+=`<tr>
-      <td class="name" onclick="openWarga('${nama}')">${nama}</td>
-      <td>${w.alamat}</td>
-    `;
-
-    for(let m=1;m<=12;m++){
-      let key=year+"-"+String(m).padStart(2,"0");
-      html+=`<td>${w.bulan[key] ? "&#10004;" : ""}</td>`;
-    }
-
-    html+="</tr>";
-  });
-
-  html+="</table>";
-
-  wrap.innerHTML=html;
 }
 
-function openWarga(nama){
-  location.href="summarywarga.html?nama="+encodeURIComponent(nama);
-}
-
-initTahun();
-load();
+/* DEFAULT */
+window.onload = ()=>{
+  el("tahun").value = new Date().getFullYear();
+  load();
+};
 
 </script>
 
