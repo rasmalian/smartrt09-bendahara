@@ -128,8 +128,8 @@ function render(data){
         <span class="badge ${t>0?'warn':''}">
           ${t>0?'Tunggakan '+t+' bulan':'Lancar'}
         </span>
+        <a href onclick="summary('${w.nama}')">Rincian</a>
       </div>
-      <a href onclick="summary('${w.nama}')">Rincian</a>
       <button onclick="bayar('${w.nama}')">Bayar</button>
     `;
 
