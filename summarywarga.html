@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{font-family:sans-serif;background:#f5f6fa;margin:0;}
+.topbar{display:flex;align-items:center;gap:10px;padding:10px;background:white;}
+.topbar button{width:40px;height:40px;border:none;border-radius:50%;background:#007bff;color:white;}
+.container{padding:15px;}
+.card{background:white;padding:12px;border-radius:10px;margin-bottom:10px;}
+select{width:100%;padding:10px;border-radius:8px;border:1px solid #ddd;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+td,th{border:1px solid #ddd;padding:6px;text-align:center;}
+.name{text-align:left;font-weight:bold;}
+</style>
+</head>
+
+<body>
+
+<div class="topbar">
+  <button onclick="goBack()">←</button>
+  <b>Summary Warga</b>
+</div>
+
+<div class="container">
+
+<div class="card">
+  <select id="tahun"></select>
+</div>
+
+<div id="result"></div>
+
+</div>
+
+<script>
+
+const API="https://script.google.com/macros/s/AKfycbxRxDsMMSVT6aXu1YWlJ-_DG9a6Vf5VL1skHbT2tognxIWKy51sV2RDgGYI7tLHnfEJFA/exec";
+
+function getParam(n){
+  return new URLSearchParams(location.search).get(n);
+}
+
+function goBack(){
+  if(document.referrer) history.back();
+  else location.href="index.html";
+}
+
+function initTahun(){
+  const now=new Date().getFullYear();
+  for(let i=now;i>=now-5;i--){
+    let o=document.createElement("option");
+    o.value=i;
+    o.textContent=i;
+    tahun.appendChild(o);
+  }
+  tahun.value=now;
+  tahun.onchange=load;
+}
+
+async function load(){
+
+  const nama = getParam("nama");
+  const year = tahun.value;
+
+  const res = await fetch(API+`?action=getSummary&mode=warga&nama=${nama}&year=${year}`);
+  const d = await res.json();
+
+  let html="<div class='card'><table>";
+
+  html+="<tr><th>Nama</th><th>Alamat</th>";
+
+  for(let m=1;m<=12;m++){
+    html+="<th>"+String(m).padStart(2,"0")+"</th>";
+  }
+
+  html+="</tr>";
+
+  html+=`<tr>
+    <td class="name">${nama}</td>
+    <td>${d.alamat||""}</td>
+  `;
+
+  for(let m=1;m<=12;m++){
+    let key = year+"-"+String(m).padStart(2,"0");
+    html+=`<td>${d.bulan && d.bulan[key] ? "&#10004;" : ""}</td>`;
+  }
+
+  html+="</tr></table></div>";
+
+  result.innerHTML=html;
+}
+
+initTahun();
+load();
+
+</script>
+
+</body>
+</html>
