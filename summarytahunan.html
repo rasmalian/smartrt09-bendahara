@@ -14,6 +14,36 @@ select{width:100%;padding:10px;border-radius:8px;border:1px solid #ddd;}
 table{border-collapse:collapse;width:max-content;min-width:100%;}
 td,th{border:1px solid #ddd;padding:6px;text-align:center;font-size:12px;}
 .name{cursor:pointer;text-align:left;font-weight:bold;color:#007bff;}
+
+ .table-wrap{
+  width:100%;
+  overflow-x:auto;
+}
+
+table{
+  border-collapse:collapse;
+  min-width:800px;
+}
+
+th, td{
+  border:1px solid #ddd;
+  padding:6px;
+  text-align:center;
+}
+
+th{
+  position:sticky;
+  top:0;
+  background:white;
+  z-index:2;
+}
+
+td:first-child, th:first-child{
+  position:sticky;
+  left:0;
+  background:white;
+  z-index:1;
+} 
 </style>
 </head>
 
