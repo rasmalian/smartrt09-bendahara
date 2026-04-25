@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{font-family:sans-serif;background:#f5f6fa;margin:0;}
+.topbar{display:flex;align-items:center;gap:10px;padding:10px;background:white;}
+.topbar button{width:40px;height:40px;border:none;border-radius:50%;background:#007bff;color:white;}
+.container{padding:10px;overflow:auto;}
+.card{background:white;padding:10px;border-radius:10px;margin-bottom:10px;}
+select{width:100%;padding:10px;border-radius:8px;border:1px solid #ddd;}
+table{border-collapse:collapse;width:max-content;min-width:100%;}
+td,th{border:1px solid #ddd;padding:6px;text-align:center;font-size:12px;}
+.name{cursor:pointer;text-align:left;font-weight:bold;color:#007bff;}
+</style>
+</head>
+
+<body>
+
+<div class="topbar">
+  <button onclick="history.back()">←</button>
+  <b>Summary Tahunan</b>
+</div>
+
+<div class="container">
+
+<div class="card">
+  <select id="tahun"></select>
+</div>
+
+<div class="card" id="wrap"></div>
+
+</div>
+
+<script>
+
+const API="https://script.google.com/macros/s/AKfycbxRxDsMMSVT6aXu1YWlJ-_DG9a6Vf5VL1skHbT2tognxIWKy51sV2RDgGYI7tLHnfEJFA/exec";
+
+function initTahun(){
+  const now=new Date().getFullYear();
+  for(let i=now;i>=now-5;i--){
+    let o=document.createElement("option");
+    o.value=i;
+    o.textContent=i;
+    tahun.appendChild(o);
+  }
+  tahun.value=now;
+  tahun.onchange=load;
+}
+
+async function load(){
+
+  const year = tahun.value;
+
+  const res = await fetch(API+`?action=getSummary&mode=all&year=${year}`);
+  const data = await res.json();
+
+  let html="<table>";
+
+  html+="<tr><th>Nama</th><th>Alamat</th>";
+
+  for(let m=1;m<=12;m++){
+    html+=`<th>${year}-${String(m).padStart(2,"0")}</th>`;
+  }
+
+  html+="</tr>";
+
+  Object.keys(data).forEach(nama=>{
+
+    let w=data[nama];
+
+    html+=`<tr>
+      <td class="name" onclick="openWarga('${nama}')">${nama}</td>
+      <td>${w.alamat}</td>
+    `;
+
+    for(let m=1;m<=12;m++){
+      let key=year+"-"+String(m).padStart(2,"0");
+      html+=`<td>${w.bulan[key] ? "&#10004;" : ""}</td>`;
+    }
+
+    html+="</tr>";
+  });
+
+  html+="</table>";
+
+  wrap.innerHTML=html;
+}
+
+function openWarga(nama){
+  location.href="summarywarga.html?nama="+encodeURIComponent(nama);
+}
+
+initTahun();
+load();
+
+</script>
+
+</body>
+</html>
