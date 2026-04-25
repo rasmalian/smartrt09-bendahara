@@ -219,10 +219,10 @@ async function load(){
       el("list").appendChild(div);
     });
 
-    el("summary").innerHTML = `
-      <b>Periode: ${ym || "Bulan Ini"}</b><br>
-      Total: <b>${total.toLocaleString("id-ID")</b>}
-    `;
+   el("summary").innerHTML = `
+  <b>Periode: ${ym || "Bulan Ini"}</b><br>
+  Total: <b>${total.toLocaleString("id-ID")}</b>
+  `;
 
   }catch(e){
     alert("Gagal load data");
