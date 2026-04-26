@@ -130,7 +130,11 @@ th{
 </div>
 
 <script>
+const isLogin = localStorage.getItem("login");
 
+if (!isLogin || isLogin !== "true") {
+  window.location.replace("login.html");
+}
 const API="https://script.google.com/macros/s/AKfycbzdOxL04-AZ3I-NmEbZ8R4uEfVuDd0W562SFns_ub0gHCqySM8JXRemRb2niipNViLvTw/exec";
 
 function showLoading(){loading.style.display="flex";}
