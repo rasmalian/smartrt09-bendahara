@@ -64,10 +64,11 @@ button.main{
   cursor:pointer;
 }
 
-/* TABLE SCROLL */
+/* WRAP (WAJIB UNTUK STICKY) */
 .table-wrap{
   width:100%;
-  overflow-x:auto;
+  overflow:auto;        /* penting */
+  max-height:70vh;      /* biar header sticky jalan */
 }
 
 /* TABLE */
@@ -79,56 +80,46 @@ table{
 
 th, td{
   border:1px solid #ddd;
-  padding:10px;      /* dari 6 → 10 */
+  padding:10px;
   text-align:center;
-  font-size:15px;    /* dari 13 → 15 */
+  font-size:15px;
 }
 
-/* HEADER SEMUA */
+/* HEADER BULAN */
 th{
   position:sticky;
   top:0;
   background:white;
-  z-index:3;
+  z-index:5;
 }
 
-/* KOLOM NAMA */
+/* KOLOM NAMA (STICKY) */
 td:first-child{
   position:sticky;
   left:0;
   background:white;
-  z-index:2;
+  z-index:3;
   text-align:left;
+  min-width:140px;
+  font-weight:bold;
 }
 
-/* HEADER NAMA (pojok kiri atas) */
+/* HEADER NAMA */
 th:first-child{
   position:sticky;
   top:0;
   left:0;
   background:white;
-  z-index:4;
+  z-index:6;
   text-align:left;
 }
 
-/* KOLOM ALAMAT */
+/* ALAMAT (TIDAK STICKY) */
 td:nth-child(2){
-  position:sticky;
-  left:140px; /* samakan dengan width kolom nama */
-  background:white;
-  z-index:2;
   text-align:left;
+  min-width:160px;
 }
 
-/* HEADER ALAMAT */
-th:nth-child(2){
-  position:sticky;
-  top:0;
-  left:140px;
-  background:white;
-  z-index:4;
-  text-align:left;
-}
 /* ZEBRA */
 tbody tr:nth-child(even){
   background:#f9fafb;
@@ -137,7 +128,7 @@ tbody tr:nth-child(even){
 /* STATUS */
 .ok{
   color:green;
-  font-size:12px;
+  font-weight:bold;
 }
 .no{
   color:#ccc;
@@ -153,9 +144,11 @@ tbody tr:nth-child(even){
   justify-content:center;
   z-index:9999;
 }
+
+/* TAP AREA */
 td{
-  min-height:44px; /* standar jari HP */
-}  
+  min-height:44px;
+}
 </style>
 </head>
 
@@ -184,7 +177,7 @@ td{
 
 <script>
 
-const API="https://script.google.com/macros/s/AKfycbwyDkIMsu9DhMBE03QxvntRGwCm5a64BRb5SKEddnx7wdkWgRuWw6HLzUanAAGG9cSH1w/exec"; // ganti
+const API="https://script.google.com/macros/s/AKfycbwyDkIMsu9DhMBE03QxvntRGwCm5a64BRb5SKEddnx7wdkWgRuWw6HLzUanAAGG9cSH1w/exec";
 
 function showLoading(){
   document.getElementById("loading").style.display="flex";
@@ -279,7 +272,6 @@ async function load(){
   }
 }
 
-/* DEFAULT LOAD */
 window.onload = ()=>{
   el("tahun").value = new Date().getFullYear();
   load();
