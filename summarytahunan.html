@@ -32,7 +32,7 @@ body{
   cursor:pointer;
 }
 
-/* CONTAINER FULL */
+/* CONTAINER */
 .container{
   width:100%;
   padding:10px;
@@ -66,10 +66,11 @@ button.main{
   cursor:pointer;
 }
 
-/* TABLE WRAP */
+/* WRAP (INI KUNCI STICKY) */
 .table-wrap{
   width:100%;
-  overflow-x:auto;
+  overflow:auto;        /* penting */
+  max-height:70vh;      /* biar header bisa sticky */
 }
 
 /* TABLE */
@@ -79,70 +80,48 @@ table{
   background:white;
 }
 
-
+/* CELL */
 th, td{
   border:1px solid #ddd;
-  padding:10px;              /* dari 6px → 10px */
+  padding:10px;
   text-align:center;
-  font-size:15px;            /* dari 12-13px → 15px */
-}  
+  font-size:15px;
+}
 
-/* HEADER */
+/* HEADER BULAN (STICKY ATAS) */
 th{
   position:sticky;
   top:0;
   background:white;
-  z-index:2;
+  z-index:5;
 }
 
-/* HEADER (SEMUA PERIODE) */
-th{
-  position:sticky;
-  top:0;
-  background:white;
-  z-index:3; /* lebih tinggi dari td */
-}
-
-/* KOLOM NAMA */
+/* KOLOM NAMA (STICKY KIRI) */
 td:first-child{
   position:sticky;
   left:0;
   background:white;
-  z-index:2;
+  z-index:3;
   text-align:left;
+  min-width:140px;
+  font-weight:bold;
 }
 
-/* HEADER NAMA (PALING ATAS KIRI) */
+/* HEADER NAMA (POJOK KIRI ATAS) */
 th:first-child{
   position:sticky;
+  top:0;
   left:0;
-  top:0;
-  z-index:4; /* PALING ATAS */
   background:white;
+  z-index:6;
   text-align:left;
 }
 
-/* KOLOM ALAMAT */
+/* ALAMAT (TIDAK STICKY) */
 td:nth-child(2){
-  position:sticky;
-  left:120px;
-  background:white;
-  z-index:2;
   text-align:left;
+  min-width:160px;
 }
-
-/* HEADER ALAMAT */
-th:nth-child(2){
-  position:sticky;
-  left:120px;
-  top:0;
-  z-index:4; /* PALING ATAS */
-  background:white;
-  text-align:left;
-}
-td{
-  min-height:44px; /* standar mobile tap */
-}  
 
 /* ZEBRA */
 tbody tr:nth-child(even){
@@ -169,16 +148,18 @@ tbody tr:nth-child(even){
   z-index:9999;
 }
 
-.nama{
-  text-decoration: underline;
-}
-
+/* CLICKABLE */
 .clickable{
   cursor:pointer;
-  font-weight:bold;
   color:#007bff;
+  font-weight:bold;
+  text-decoration:underline;
 }
-  
+
+/* TAP AREA */
+td{
+  min-height:44px;
+}
 </style>
 </head>
 
@@ -214,9 +195,9 @@ function goSummary(nama){
     "summarywarga.html?nama=" +
     encodeURIComponent(nama) +
     "&year=" + year;
-}  
+}
 
-const API = "https://script.google.com/macros/s/AKfycbwyDkIMsu9DhMBE03QxvntRGwCm5a64BRb5SKEddnx7wdkWgRuWw6HLzUanAAGG9cSH1w/exec"; // ganti
+const API = "https://script.google.com/macros/s/AKfycbwyDkIMsu9DhMBE03QxvntRGwCm5a64BRb5SKEddnx7wdkWgRuWw6HLzUanAAGG9cSH1w/exec";
 
 function showLoading(){
   document.getElementById("loading").style.display="flex";
@@ -245,13 +226,10 @@ function buildMonths(year){
   return arr;
 }
 
-/* FORMAT TANGGAL AMAN */
 function formatTanggal(v){
   if(!v) return "";
-
   let d = new Date(v);
   if(isNaN(d)) return "";
-
   return d.toLocaleDateString("id-ID");
 }
 
@@ -282,7 +260,7 @@ async function load(){
       const w = data[nama];
 
       html += `<tr>`;
-      html += `<td class="nama clickable" onclick="goSummary('${nama}')">${nama}</td>`;
+      html += `<td class="clickable" onclick="goSummary('${nama}')">${nama}</td>`;
       html += `<td>${w.alamat || ""}</td>`;
 
       months.forEach(m=>{
@@ -314,7 +292,6 @@ async function load(){
   }
 }
 
-/* DEFAULT */
 window.onload = ()=>{
   el("tahun").value = new Date().getFullYear();
   load();
