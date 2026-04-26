@@ -188,6 +188,12 @@ td{
 
 <script>
 
+const isLogin = localStorage.getItem("login");
+
+if (!isLogin || isLogin !== "true") {
+  window.location.replace("login.html");
+}  
+
 function goSummary(nama){
   const year = document.getElementById("tahun").value;
 
