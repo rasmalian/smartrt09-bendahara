@@ -95,24 +95,50 @@ th{
   z-index:2;
 }
 
-/* NAMA */
-td:first-child, th:first-child{
+/* HEADER (SEMUA PERIODE) */
+th{
+  position:sticky;
+  top:0;
+  background:white;
+  z-index:3; /* lebih tinggi dari td */
+}
+
+/* KOLOM NAMA */
+td:first-child{
   position:sticky;
   left:0;
   background:white;
-  z-index:1;
+  z-index:2;
   text-align:left;
-  min-width:120px;
 }
 
-/* ALAMAT */
-td:nth-child(2), th:nth-child(2){
+/* HEADER NAMA (PALING ATAS KIRI) */
+th:first-child{
+  position:sticky;
+  left:0;
+  top:0;
+  z-index:4; /* PALING ATAS */
+  background:white;
+  text-align:left;
+}
+
+/* KOLOM ALAMAT */
+td:nth-child(2){
   position:sticky;
   left:120px;
   background:white;
-  z-index:1;
+  z-index:2;
   text-align:left;
-  min-width:140px;
+}
+
+/* HEADER ALAMAT */
+th:nth-child(2){
+  position:sticky;
+  left:120px;
+  top:0;
+  z-index:4; /* PALING ATAS */
+  background:white;
+  text-align:left;
 }
 td{
   min-height:44px; /* standar mobile tap */
