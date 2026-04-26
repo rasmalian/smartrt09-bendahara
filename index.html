@@ -102,7 +102,11 @@ button{
 </div>
 
 <script>
+const isLogin = localStorage.getItem("login");
 
+if (!isLogin || isLogin !== "true") {
+  window.location.replace("login.html");
+}
 const API="https://script.google.com/macros/s/AKfycby4skg8yWNJjAC4bUlOUi1XV3LmT1y3nEXVFdWPcVI461y3MWksXRRHQjytvhPpvNkNtA/exec";
 let raw=[];
 
