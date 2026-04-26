@@ -77,7 +77,7 @@ input[type="month"]{
   padding:20px;
   border-radius:12px;
   background:linear-gradient(135deg,#4facfe,#00f2fe);
-  color:white;
+  color:black;
 }
 
 .summary-box .periode{
@@ -145,6 +145,14 @@ input[type="month"]{
 
 const API="https://script.google.com/macros/s/AKfycbyEvc4ntv7M3bIMxkIRmRLM0sa-_-6uJnIh9uvAzzPBo5HlD9QmUEpIWpmZgOTYUVX4pQ/exec";
 
+function formatTanggal(v){
+  if(!v) return "-";
+  const d = new Date(v);
+  if(isNaN(d)) return "-";
+
+  return d.toLocaleDateString("id-ID"); // hasil: 24/04/2026
+}
+  
 function showLoading(){
   document.getElementById("loading").style.display="flex";
 }
@@ -195,7 +203,7 @@ async function load(){
         <div style="display:flex; justify-content:space-between; align-items:center;">
           <div>
             <div>${r.kategori || "-"}</div>
-            <div style="font-size:13px;color:#666">${r.tanggal || "-"}</div>
+            <div style="font-size:13px;color:#666">${formatTanggal(r.tanggal) || "-"}</div>
           </div>
           <div>
             <b class="${val>=0?'plus':'minus'}">
