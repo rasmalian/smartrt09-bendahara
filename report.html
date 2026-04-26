@@ -55,7 +55,7 @@ button.main{
 .plus{color:green}
 .minus{color:red}
 
-/* ✅ FIX MONTH PICKER */
+/* MONTH PICKER */
 input[type="month"]{
   width:100%;
   padding:12px;
@@ -65,42 +65,44 @@ input[type="month"]{
   background:white;
 }
 
-/* icon calendar */
-input[type="month"]::-webkit-calendar-picker-indicator{
-  cursor:pointer;
-  opacity:0.7;
-}
-
-/* focus effect */
-input[type="month"]:focus{
-  outline:none;
-  border:1px solid #007bff;
-  box-shadow:0 0 0 2px rgba(0,123,255,0.2);
-}
-
- /* pastikan semua elemen aman */
-*{
-  box-sizing: border-box;
-}
-
-/* bungkus input biar aman */
+/* WRAP */
 .input-wrap{
   width:100%;
   overflow:hidden;
 }
 
-/* month picker */
-input[type="month"]{
-  width:100%;
-  max-width:100%;
-  padding:12px;
-  border-radius:8px;
-  border:1px solid #ddd;
-  font-size:16px;
-  background:white;
-  display:block;
-} 
+/* 🔥 SUMMARY HIGHLIGHT */
+.summary-box{
+  text-align:center;
+  padding:20px;
+  border-radius:12px;
+  background:linear-gradient(135deg,#4facfe,#00f2fe);
+  color:white;
+}
 
+.summary-box .periode{
+  font-size:14px;
+  opacity:0.9;
+}
+
+.summary-box .total{
+  font-size:24px;
+  font-weight:bold;
+  margin-top:5px;
+}
+
+/* LOADING */
+#loading{
+  position:fixed;
+  top:0;left:0;
+  width:100%;
+  height:100%;
+  background:rgba(255,255,255,0.8);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+}
 </style>
 </head>
 
@@ -116,7 +118,7 @@ input[type="month"]{
 <div class="card">
   <label>Pilih Bulan</label>
   <div class="input-wrap">
-  <input type="month" id="bulan">
+    <input type="month" id="bulan">
   </div>
   <br><br>
   <button class="main" onclick="load()">Load</button>
@@ -128,17 +130,7 @@ input[type="month"]{
 </div>
 
 <!-- LOADING -->
-<div id="loading" style="
-position:fixed;
-top:0;left:0;
-width:100%;
-height:100%;
-background:rgba(255,255,255,0.8);
-display:none;
-align-items:center;
-justify-content:center;
-z-index:9999;
-">
+<div id="loading">
   <div style="
     padding:20px;
     background:white;
@@ -200,29 +192,29 @@ async function load(){
       div.className = "card";
 
       div.innerHTML = `
-  <div style="display:flex; justify-content:space-between; align-items:center;">
-    
-    <div>
-      <div>${r.kategori || "-"}</div>
-      <div style="font-size:13px;color:#666">${r.tanggal || "-"}</div>
-    </div>
-
-    <div>
-      <b class="${val>=0?'plus':'minus'}">
-        ${val.toLocaleString("id-ID")}
-      </b>
-    </div>
-
-  </div>
-`;
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div>${r.kategori || "-"}</div>
+            <div style="font-size:13px;color:#666">${r.tanggal || "-"}</div>
+          </div>
+          <div>
+            <b class="${val>=0?'plus':'minus'}">
+              ${val.toLocaleString("id-ID")}
+            </b>
+          </div>
+        </div>
+      `;
 
       el("list").appendChild(div);
     });
 
-   el("summary").innerHTML = `
-  <b>Periode: ${ym || "Bulan Ini"}</b><br>
-  Total: <b>${total.toLocaleString("id-ID")}</b>
-  `;
+    /* 🔥 SUMMARY (SUDAH DI CENTER + HIGHLIGHT) */
+    el("summary").innerHTML = `
+      <div class="summary-box">
+        <div class="periode">Periode: ${ym || "Bulan Ini"}</div>
+        <div class="total">Rp ${total.toLocaleString("id-ID")}</div>
+      </div>
+    `;
 
   }catch(e){
     alert("Gagal load data");
@@ -231,7 +223,7 @@ async function load(){
   }
 }
 
-/* ✅ AUTO SET BULAN SEKARANG */
+/* AUTO BULAN SEKARANG */
 window.onload = () => {
   const now = new Date();
   el("bulan").value = now.toISOString().slice(0,7);
