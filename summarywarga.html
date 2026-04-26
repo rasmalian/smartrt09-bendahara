@@ -176,7 +176,11 @@ td{
 <div id="loading">Loading...</div>
 
 <script>
+const isLogin = localStorage.getItem("login");
 
+if (!isLogin || isLogin !== "true") {
+  window.location.replace("login.html");
+}
 const API="https://script.google.com/macros/s/AKfycbwyDkIMsu9DhMBE03QxvntRGwCm5a64BRb5SKEddnx7wdkWgRuWw6HLzUanAAGG9cSH1w/exec";
 
 function showLoading(){
