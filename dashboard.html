@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body{font-family:sans-serif;margin:0;background:#f5f6fa}
+
+.header{
+  background:#007bff;
+  color:white;
+  padding:15px;
+  text-align:center;
+}
+
+.menu{
+  display:flex;
+  background:white;
+}
+
+.menu a{
+  flex:1;
+  padding:12px;
+  text-align:center;
+  text-decoration:none;
+  color:#333;
+}
+
+.container{
+  max-width:600px;
+  margin:auto;
+  padding:10px;
+}
+
+.card{
+  background:white;
+  padding:12px;
+  border-radius:10px;
+  margin-bottom:10px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.badge{
+  font-size:12px;
+  padding:4px 8px;
+  border-radius:6px;
+  background:#e9ecef;
+}
+
+.warn{
+  background:#ffcccc;
+  color:#b30000;
+}
+
+/* 🔥 DROPDOWN MODERN */
+.select{
+  appearance:none;
+  -webkit-appearance:none;
+  width:100%;
+  padding:12px;
+  border-radius:10px;
+  border:1px solid #ddd;
+  background:white;
+  font-size:14px;
+  margin-bottom:10px;
+  background-image:url("data:image/svg+xml;utf8,<svg fill='%23007bff' height='20' viewBox='0 0 24 24' width='20'><path d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat:no-repeat;
+  background-position:right 10px center;
+}
+
+button{
+  padding:8px 12px;
+  border:none;
+  border-radius:8px;
+  background:#28a745;
+  color:white;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">Dashboard Keuangan SMARTRT Warga RT 09</div>
+
+<div class="menu">
+  <a href="#">Warga</a>
+  <a href="transaksi.html">Transaksi</a>
+  <a href="report.html">Report</a>
+  <a href="summarytahunan.html">Summary</a>
+</div>
+
+<div class="container">
+
+<select id="sort" class="select">
+  <option value="rajin">Paling Rajin</option>
+  <option value="nunggak">Paling Nunggak</option>
+</select>
+
+<div id="list"></div>
+
+</div>
+
+<script>
+
+const API="https://script.google.com/macros/s/AKfycby4skg8yWNJjAC4bUlOUi1XV3LmT1y3nEXVFdWPcVI461y3MWksXRRHQjytvhPpvNkNtA/exec";
+let raw=[];
+
+function el(id){return document.getElementById(id);}
+
+function render(data){
+
+  const list=el("list");
+  list.innerHTML="";
+
+  data.forEach(w=>{
+
+    const t=w.tunggakan||0;
+
+    const div=document.createElement("div");
+    div.className="card";
+
+    div.innerHTML=`
+      <div>
+        <b>${w.nama}</b><br>
+        ${w.alamat}<br>
+        <small>Terakhir bayar: ${w.bayarterakhir || "-"}</small>
+        <span class="badge ${t>0?'warn':''}">
+          ${t>0?'Tunggakan '+t+' bulan':'Lancar'}
+        </span>
+        <span class="link" onclick="summary('${w.nama}')"  style="text-decoration: underline; color: blue;">
+          <small>Rincian</small>
+        </span>
+      </div>
+      <button onclick="bayar('${w.nama}')">Bayar</button>
+    `;
+
+    list.appendChild(div);
+  });
+}
+
+function sortData(){
+  let mode=el("sort").value;
+  let data=[...raw];
+
+  if(mode==="rajin"){
+    data.sort((a,b)=>a.tunggakan-b.tunggakan);
+  }else{
+    data.sort((a,b)=>b.tunggakan-a.tunggakan);
+  }
+
+  render(data);
+}
+
+function bayar(n){
+  location.href="iuran.html?nama="+encodeURIComponent(n);
+}
+function summary(n){
+  location.href="summarywarga.html?nama="+encodeURIComponent(n);
+}
+async function load(){
+  const r=await fetch(API+"?action=getWarga");
+  raw=await r.json();
+  sortData();
+}
+
+el("sort").onchange=sortData;
+
+load();
+
+function getParam(n){
+  return new URL(window.location.href).searchParams.get(n);
+}
+
+window.onload = function(){
+
+  if(getParam("reload")){
+    console.log("Data baru masuk, refresh dashboard");
+  }
+
+  loadWarga(); // function kamu
+}  
+
+</script>
+
+</body>
+</html>
