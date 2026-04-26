@@ -142,6 +142,12 @@ input[type="month"]{
 </div>
 
 <script>
+const isLogin = localStorage.getItem("login");
+
+if (!isLogin || isLogin !== "true") {
+  window.location.replace("login.html");
+}
+  
 
 const API="https://script.google.com/macros/s/AKfycbyEvc4ntv7M3bIMxkIRmRLM0sa-_-6uJnIh9uvAzzPBo5HlD9QmUEpIWpmZgOTYUVX4pQ/exec";
 
