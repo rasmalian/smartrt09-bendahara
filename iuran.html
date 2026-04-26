@@ -157,6 +157,11 @@ box-shadow:0 2px 10px rgba(0,0,0,0.1);
   
 
 <script>
+const isLogin = localStorage.getItem("login");
+
+if (!isLogin || isLogin !== "true") {
+  window.location.replace("login.html");
+}  
 function setToday(){
   const today = new Date().toISOString().split("T")[0];
   document.getElementById("tanggal_bayar").value = today;
