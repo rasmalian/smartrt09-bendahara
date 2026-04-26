@@ -84,38 +84,51 @@ th, td{
   font-size:15px;    /* dari 13 → 15 */
 }
 
-/* HEADER */
+/* HEADER SEMUA */
 th{
   position:sticky;
   top:0;
   background:white;
-  z-index:2;
+  z-index:3;
 }
 
-/* NAMA */
-td:first-child, th:first-child{
+/* KOLOM NAMA */
+td:first-child{
   position:sticky;
   left:0;
   background:white;
-  z-index:1;
+  z-index:2;
   text-align:left;
-  min-width:140px;
-  font-size:16px;
-  font-weight:bold;
 }
 
-/* ALAMAT */
-td:nth-child(2), th:nth-child(2){
+/* HEADER NAMA (pojok kiri atas) */
+th:first-child{
   position:sticky;
-  left:120px;
+  top:0;
+  left:0;
   background:white;
-  z-index:1;
+  z-index:4;
   text-align:left;
-  min-width:140px;
-  font-size:15px;
-  font-weight:bold;
 }
 
+/* KOLOM ALAMAT */
+td:nth-child(2){
+  position:sticky;
+  left:140px; /* samakan dengan width kolom nama */
+  background:white;
+  z-index:2;
+  text-align:left;
+}
+
+/* HEADER ALAMAT */
+th:nth-child(2){
+  position:sticky;
+  top:0;
+  left:140px;
+  background:white;
+  z-index:4;
+  text-align:left;
+}
 /* ZEBRA */
 tbody tr:nth-child(even){
   background:#f9fafb;
