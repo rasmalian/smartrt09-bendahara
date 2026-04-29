@@ -96,6 +96,7 @@ button{
 <select id="sort" class="select">
   <option value="rajin">Paling Rajin</option>
   <option value="nunggak">Paling Nunggak</option>
+  <option value="no">Nomer</option>
 </select>
 
 <div id="list"></div>
@@ -145,13 +146,19 @@ function render(data){
 }
 
 function sortData(){
-  let mode=el("sort").value;
-  let data=[...raw];
+  let mode = el("sort").value;
+  let data = [...raw];
 
-  if(mode==="rajin"){
-    data.sort((a,b)=>a.tunggakan-b.tunggakan);
-  }else{
-    data.sort((a,b)=>b.tunggakan-a.tunggakan);
+  if(mode === "rajin"){
+    data.sort((a,b)=>a.tunggakan - b.tunggakan);
+
+  }else if(mode === "nunggak"){
+    data.sort((a,b)=>b.tunggakan - a.tunggakan);
+
+  }else if(mode === "no"){
+    data.sort((a,b)=>{
+      return Number(a.no || 0) - Number(b.no || 0);
+    });
   }
 
   render(data);
