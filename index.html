@@ -77,6 +77,21 @@ button{
   background:#28a745;
   color:white;
 }
+
+.summary-warga{
+  text-align:center;
+  padding:12px;
+  border-radius:10px;
+  background:#e8f5e9;   /* hijau soft */
+  border:1px solid #a5d6a7;
+  font-size:16px;
+}
+
+.summary-warga b{
+  font-size:20px;
+  color:#2e7d32;
+}
+  
 </style>
 </head>
 
@@ -92,7 +107,9 @@ button{
 </div>
 
 <div class="container">
-
+<div class="card summary-warga">
+  Total Warga: <b id="totalWarga">0</b>
+</div>
 <select id="sort" class="select">
   <option value="rajin">Paling Rajin</option>
   <option value="nunggak">Paling Nunggak</option>
@@ -173,6 +190,10 @@ function summary(n){
 async function load(){
   const r=await fetch(API+"?action=getWarga");
   raw=await r.json();
+
+  const total = raw.length || 0;
+  document.getElementById("totalWarga").innerText = total;
+
   sortData();
 }
 
