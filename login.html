@@ -79,7 +79,7 @@ button:active{
 
 <script>
 
-const API="https://script.google.com/macros/s/AKfycbzZikHJH9AvuMQUbXWzGjKQjuzRGwAfS-m_PL73wNlfSFH7BjfhTfUNEYTkjcupkGw7hg/exec"; // ganti URL kamu
+const API="https://script.google.com/macros/s/AKfycbzGNzFD5ARJGcGkYtEQg26Pn4AcQQqwuZrRMIZihcDuNPyqt8bYj28QCv0aOiR9U3cErQ/exec"; // ganti URL kamu
 
 function showLoading(){
   document.getElementById("loading").style.display="flex";
@@ -118,7 +118,7 @@ async function login(){
       // simpan session sederhana
       localStorage.setItem("login","true");
 
-      location.href="inxxdex.html";
+      location.href=r.url;
     }else{
       alert(r.msg || "Gagal login");
     }
